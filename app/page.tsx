@@ -12,7 +12,6 @@ export default function Home() {
         className="object-cover"
       />
 
-      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/50" />
     </main>
   );

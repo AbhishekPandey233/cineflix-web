@@ -4,12 +4,10 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        {/* Brand */}
         <Link href="/" className="font-semibold text-white">
           CineFlix
         </Link>
 
-        {/* Center: Nav (glass pill only for nav) */}
         <nav className="hidden md:flex items-center gap-6 rounded-full border border-white/15 bg-white/10 px-6 py-2 text-sm text-white/80 backdrop-blur-md">
           <Link href="/" className="hover:text-white transition">
             Home
@@ -25,7 +23,6 @@ export default function Header() {
           </Link>
         </nav>
 
-        {/* Actions (same style + centered) */}
         <div className="flex items-center gap-3">
           <Link
             href="/login"
