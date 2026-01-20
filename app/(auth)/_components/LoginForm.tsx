@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LoginData, loginSchema } from "../schema";
+import { handleLogin } from "@/lib/actions/auth-actions"; // <- import server action
 
 export default function LoginForm() {
   const router = useRouter();
@@ -23,12 +24,15 @@ export default function LoginForm() {
 
   const submit = async (values: LoginData) => {
     startTransition(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      localStorage.setItem("token", "dummy-token"); // dummy auth
-      router.push("/auth/dashboard");
-    });
+      // Call server action
+      const res = await handleLogin(values);
 
-    console.log("login", values);
+      if (res.success) {
+        router.push("/"); // redirect on success
+      } else {
+        alert(res.message); // show error message
+      }
+    });
   };
 
   return (
