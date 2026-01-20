@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RegisterData, registerSchema } from "../schema";
+import { handleRegister } from "@/lib/actions/auth-actions";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -23,11 +24,13 @@ export default function RegisterForm() {
 
   const submit = async (values: RegisterData) => {
     startTransition(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      router.push("/login");
+      const res = await handleRegister(values);
+      if (res.success) {
+        router.push("/login");
+      } else {
+        alert(res.message);
+      }
     });
-
-    console.log("register", values);
   };
 
   return (
@@ -92,9 +95,7 @@ export default function RegisterForm() {
           placeholder="••••••"
         />
         {errors.confirmPassword?.message && (
-          <p className="text-xs text-red-600">
-            {errors.confirmPassword.message}
-          </p>
+          <p className="text-xs text-red-600">{errors.confirmPassword.message}</p>
         )}
       </div>
 
