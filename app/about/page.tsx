@@ -52,7 +52,7 @@ export default function AboutPage() {
 
       </div>
 
-      {/* Mission Section Full-Width */}
+      {/* Mission Section  */}
       <section className="mt-16 bg-zinc-900/50 py-16 px-4 text-center backdrop-blur-sm w-full">
         <h2 className="mb-4 text-3xl font-bold text-white">Our Mission</h2>
         <p className="max-w-3xl mx-auto text-white/70 text-lg">
