@@ -28,7 +28,7 @@ export default function LoginForm() {
       const res = await handleLogin(values);
 
       if (res.success) {
-        router.push("/"); // redirect on success
+        router.push("/home"); // redirect on success
       } else {
         alert(res.message); // show error message
       }
