@@ -5,7 +5,6 @@ export default function Dashboard() {
   return (
     <main className="relative h-screen w-full overflow-hidden text-white">
 
-      {/* Background Image */}
       <Image
         src="/dashboard.jpeg"
         alt="CineFlix dashboard background"
@@ -14,10 +13,8 @@ export default function Dashboard() {
         className="object-cover"
       />
 
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/70" />
 
-      {/* Content */}
       <div className="relative z-10 mx-auto flex h-full max-w-6xl flex-col items-center justify-center px-6 text-center">
 
         <h1 className="mb-4 text-4xl font-bold md:text-6xl">
