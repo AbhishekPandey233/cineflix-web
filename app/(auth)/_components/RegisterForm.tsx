@@ -35,7 +35,6 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-5">
-      {/* Name */}
       <div className="space-y-2">
         <label className="text-xs font-medium" htmlFor="name">
           Name
@@ -51,7 +50,6 @@ export default function RegisterForm() {
         )}
       </div>
 
-      {/* Email */}
       <div className="space-y-2">
         <label className="text-xs font-medium" htmlFor="email">
           Email
@@ -69,7 +67,6 @@ export default function RegisterForm() {
         )}
       </div>
 
-      {/* Password */}
       <div className="space-y-2">
         <label className="text-xs font-medium" htmlFor="password">
           Password
@@ -86,7 +83,6 @@ export default function RegisterForm() {
         )}
       </div>
 
-      {/* Confirm Password */}
       <div className="space-y-2">
         <label className="text-xs font-medium" htmlFor="confirmPassword">
           Confirm Password
@@ -103,7 +99,6 @@ export default function RegisterForm() {
         )}
       </div>
 
-      {/* Button */}
       <button
         type="submit"
         disabled={isSubmitting || pending}
@@ -112,7 +107,6 @@ export default function RegisterForm() {
         {isSubmitting || pending ? "Creating account..." : "Create account"}
       </button>
 
-      {/* Footer */}
       <div className="mt-2 text-center text-xs">
         Already have an account?{" "}
         <Link href="/login" className="font-semibold hover:underline">
