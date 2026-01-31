@@ -1,1 +1,0 @@
-// to use server component and boundry efficiently must be a server component
