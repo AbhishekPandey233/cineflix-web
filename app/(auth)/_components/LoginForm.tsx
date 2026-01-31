@@ -25,8 +25,15 @@ export default function LoginForm() {
   const submit = async (values: LoginData) => {
     startTransition(async () => {
       const res = await handleLogin(values);
+
       if (res.success) {
-        router.push("/home");
+        const role = res.data?.role;
+
+        if (role === "admin") {
+          router.replace("/admin/users");
+        } else {
+          router.replace("/home"); 
+        }
       } else {
         alert(res.message);
       }
@@ -34,9 +41,9 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-5"> {/* Slightly bigger spacing between sections */}
+    <form onSubmit={handleSubmit(submit)} className="space-y-5">
       {/* Email */}
-      <div className="space-y-2"> {/* More space between label, input, and error */}
+      <div className="space-y-2">
         <label className="text-xs font-medium" htmlFor="email">
           Email
         </label>
@@ -54,7 +61,7 @@ export default function LoginForm() {
       </div>
 
       {/* Password */}
-      <div className="space-y-2"> {/* More space here too */}
+      <div className="space-y-2">
         <label className="text-xs font-medium" htmlFor="password">
           Password
         </label>
@@ -71,7 +78,6 @@ export default function LoginForm() {
         )}
       </div>
 
-      {/* Button */}
       <button
         type="submit"
         disabled={isSubmitting || pending}
@@ -80,7 +86,6 @@ export default function LoginForm() {
         {isSubmitting || pending ? "Logging in..." : "Log in"}
       </button>
 
-      {/* Footer */}
       <div className="mt-2 text-center text-xs">
         Don&apos;t have an account?{" "}
         <Link href="/register" className="font-semibold hover:underline">
