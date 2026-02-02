@@ -4,7 +4,8 @@ import { cookies } from "next/headers";
 const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function GET() {
-  const token = (await cookies()).get("token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore?.get?.("token")?.value ?? (cookieStore as any)["token"] ?? null;
   if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
   const res = await fetch(`${BACKEND_URL}/api/admin/users`, {
@@ -17,7 +18,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const token = (await cookies()).get("token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore?.get?.("token")?.value ?? (cookieStore as any)["token"] ?? null;
   if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
   const formData = await req.formData();
