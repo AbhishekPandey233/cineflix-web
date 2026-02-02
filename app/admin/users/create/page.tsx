@@ -42,8 +42,15 @@ export default function AdminCreateUserPage() {
       setPassword("");
       setRole("user");
       setImage(null);
-    } catch (err: any) {
-      setMessage(err?.response?.data?.message || err?.message || "Something went wrong");
+    } catch (err: unknown) {
+      let msg = "Something went wrong";
+      if (err instanceof Error) msg = err.message;
+      else if (typeof err === "object" && err !== null && "response" in err) {
+        // axios error shape: err.response.data.message
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        msg = (err as any)?.response?.data?.message ?? msg;
+      }
+      setMessage(msg);
     } finally {
       setLoading(false);
     }
