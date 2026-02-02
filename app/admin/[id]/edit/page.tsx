@@ -52,11 +52,18 @@ export default function AdminUserEditPage() {
       setUser(u);
       setName(u.name ?? "");
       setEmail(u.email ?? "");
-      setRole((u.role as any) ?? "user");
+      setRole((u.role as "user" | "admin") ?? "user");
       setPassword("");
       setImage(null);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to load user");
+    } catch (err: unknown) {
+      let msg = "Failed to load user";
+      if (err instanceof Error) msg = err.message;
+      else if (typeof err === "object" && err !== null) {
+        // axios error shape: err.response.data.message
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        msg = (err as any)?.response?.data?.message ?? (err as any)?.message ?? msg;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -65,7 +72,6 @@ export default function AdminUserEditPage() {
   useEffect(() => {
     if (!id) return; // wait until params are available
     fetchUser(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,7 +98,7 @@ export default function AdminUserEditPage() {
         setUser(updated);
         setName(updated.name ?? "");
         setEmail(updated.email ?? "");
-        setRole((updated.role as any) ?? "user");
+        setRole((updated.role as "user" | "admin") ?? "user");
         setPassword("");
         setImage(null);
       } else {
@@ -101,8 +107,15 @@ export default function AdminUserEditPage() {
 
       router.push(`/admin/${id}`);
       router.refresh();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to update user");
+    } catch (err: unknown) {
+      let msg = "Failed to update user";
+      if (err instanceof Error) msg = err.message;
+      else if (typeof err === "object" && err !== null) {
+        // axios error shape: err.response.data.message
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        msg = (err as any)?.response?.data?.message ?? (err as any)?.message ?? msg;
+      }
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -111,7 +124,7 @@ export default function AdminUserEditPage() {
   if (!id) {
     return (
       <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>/admin/[id]/edit</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
         <p style={{ marginTop: 12 }}>Loading route params...</p>
       </div>
     );
@@ -120,7 +133,7 @@ export default function AdminUserEditPage() {
   if (loading) {
     return (
       <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>/admin/[id]/edit</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
         <p style={{ marginTop: 12 }}>Loading...</p>
       </div>
     );
@@ -129,7 +142,7 @@ export default function AdminUserEditPage() {
   if (error) {
     return (
       <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>/admin/[id]/edit</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
         <p style={{ marginTop: 12 }}>ID: {id}</p>
         <p style={{ marginTop: 12 }}>{error}</p>
         <button
@@ -145,7 +158,7 @@ export default function AdminUserEditPage() {
   if (!user) {
     return (
       <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>/admin/[id]/edit</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
         <p style={{ marginTop: 12 }}>User not found</p>
       </div>
     );
@@ -153,7 +166,7 @@ export default function AdminUserEditPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>/admin/[id]/edit</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
       <p style={{ marginTop: 12 }}>ID: {id}</p>
 
       <form onSubmit={handleSubmit} style={{ marginTop: 16, maxWidth: 420 }}>
