@@ -18,7 +18,9 @@ export async function GET(_req: Request, { params }: Context) {
     );
   }
 
-  const token = (await cookies()).get("token")?.value;
+  const cookieStore = await cookies();
+  const tokenCookie = cookieStore.get("token");
+  const token = tokenCookie?.value ?? null;
   if (!token) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
@@ -45,7 +47,9 @@ export async function PUT(req: Request, { params }: Context) {
     );
   }
 
-  const token = (await cookies()).get("token")?.value;
+  const cookieStore = await cookies();
+  const tokenCookie = cookieStore.get("token");
+  const token = tokenCookie?.value ?? null;
   if (!token) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
@@ -75,7 +79,9 @@ export async function DELETE(_req: Request, { params }: Context) {
     );
   }
 
-  const token = (await cookies()).get("token")?.value;
+  const cookieStore = await cookies();
+  const tokenCookie = cookieStore.get("token");
+  const token = tokenCookie?.value ?? null;
   if (!token) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
