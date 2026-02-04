@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/lib/api/axios";
 
 function ProfileDrawer({
   open,
@@ -32,14 +33,30 @@ function ProfileDrawer({
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/user/profile");
-        if (!res.ok) {
-          if (mounted) setUser(null);
-          return;
+        const buildImageUrl = (path?: string | null) => {
+          if (!path) return null;
+          const baseFromEnv = process.env.NEXT_PUBLIC_API_BASE_URL ?? undefined;
+          const baseFromAxios = axiosInstance.defaults.baseURL ?? undefined;
+          const fallback = typeof window !== "undefined" ? `${window.location.protocol}//${window.location.hostname}:5000` : "";
+          const base = baseFromEnv || baseFromAxios || fallback || "";
+          if (!base) return path;
+          const cleanedBase = base.replace(/\/$/, "");
+          return `${cleanedBase}${path.startsWith("/") ? path : `/${path}`}`;
         }
-        const data = await res.json();
-        if (mounted) setUser(data.data ?? null);
-      } catch (err) {
+
+        try {
+          const res = await axiosInstance.get("/api/user/profile");
+          const data = res.data;
+          const profile = data.data ?? null;
+          if (profile) {
+            const avatarFromImage = profile.image ? buildImageUrl(profile.image) : undefined;
+            profile.avatar = profile.avatar ?? avatarFromImage;
+          }
+          if (mounted) setUser(profile);
+        } catch {
+          if (mounted) setUser(null);
+        }
+      } catch {
         if (mounted) setUser(null);
       } finally {
         if (mounted) setLoading(false);
@@ -58,17 +75,17 @@ function ProfileDrawer({
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("/api/auth/logout", { method: "POST" });
-      if (res.ok) {
+      const res = await axiosInstance.post("/api/auth/logout");
+      if (res.status >= 200 && res.status < 300) {
         setUser(null);
         onClose();
         router.push("/login");
         return;
       }
 
-      const data = await res.json().catch(() => null);
+      const data = res.data;
       alert(data?.message || "Logout failed");
-    } catch (err) {
+    } catch {
       alert("Network error. Please try again.");
     }
   };

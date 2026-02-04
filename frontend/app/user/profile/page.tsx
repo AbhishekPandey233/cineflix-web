@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import axiosInstance from "@/lib/api/axios";
 
 type User = {
   _id?: string;
@@ -9,6 +11,7 @@ type User = {
   email?: string;
   role?: string;
   avatar?: string;
+  image?: string; // backend stored relative path (/uploads/users/..)
 };
 
 export default function ProfilePage() {
@@ -19,26 +22,38 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Build full URL from backend-stored image path
+  const buildImageUrl = (path?: string | null) => {
+    if (!path) return null;
+    const baseFromEnv = process.env.NEXT_PUBLIC_API_BASE_URL ?? undefined;
+    const baseFromAxios = axiosInstance.defaults.baseURL ?? undefined;
+    const fallback = typeof window !== "undefined" ? `${window.location.protocol}//${window.location.hostname}:5000` : "";
+    const base = baseFromEnv || baseFromAxios || fallback || "";
+    if (!base) return path;
+    const cleanedBase = base.replace(/\/$/, "");
+    return `${cleanedBase}${path.startsWith("/") ? path : `/${path}`}`;
+  }
+
   useEffect(() => {
     let mounted = true;
 
     const fetchUser = async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/user/profile");
-        if (!res.ok) {
-          setUser(null);
-          setMessage({ type: "error", text: "You are not logged in. Please log in to view your profile." });
-          return;
-        }
-
-        const data = await res.json();
+        const res = await axiosInstance.get("/api/user/profile");
+        const data = res.data;
         if (mounted) {
-          setUser(data.data ?? null);
-          setName(data.data?.name ?? "");
-          setEmail(data.data?.email ?? "");
+          const profile = data.data ?? null;
+          if (profile) {
+            const avatarFromImage = profile.image ? buildImageUrl(profile.image) : undefined;
+            profile.avatar = profile.avatar ?? avatarFromImage;
+          }
+
+          setUser(profile);
+          setName(profile?.name ?? "");
+          setEmail(profile?.email ?? "");
         }
-      } catch (err) {
+      } catch {
         setMessage({ type: "error", text: "Could not load profile" });
       } finally {
         if (mounted) setLoading(false);
@@ -57,20 +72,16 @@ export default function ProfilePage() {
     setMessage(null);
 
     try {
-      const res = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setMessage({ type: "error", text: data.message || "Failed to update profile" });
+      const res = await axiosInstance.put("/api/user/profile", { name, email });
+      const data = res.data;
+      if (!data || !data.success) {
+        setMessage({ type: "error", text: data?.message || "Failed to update profile" });
       } else {
         setUser(data.data);
+        try { document.cookie = `user=${encodeURIComponent(JSON.stringify(data.data))}; path=/`; } catch {}
         setMessage({ type: "success", text: "Profile updated" });
       }
-    } catch (err) {
+    } catch {
       setMessage({ type: "error", text: "Unexpected error" });
     } finally {
       setSaving(false);
@@ -93,7 +104,9 @@ export default function ProfilePage() {
               <div className="col-span-1 flex flex-col items-center gap-4">
                 <div className="relative">
                   {user.avatar ? (
-                    <img src={user.avatar} alt="avatar" className="h-28 w-28 rounded-full object-cover" />
+                    <div className="relative h-28 w-28 rounded-full overflow-hidden">
+                      <Image src={user.avatar} alt="avatar" fill className="object-cover" sizes="112px" />
+                    </div>
                   ) : (
                     <div className="h-28 w-28 rounded-full bg-gradient-to-r from-red-600 to-red-700 grid place-items-center text-white text-2xl font-bold">
                       {initials}
@@ -138,23 +151,36 @@ export default function ProfilePage() {
                         const fd = new FormData();
                         fd.append("avatar", file);
 
-                        const res = await fetch("/api/user/avatar", {
-                          method: "POST",
-                          body: fd,
+                        const res = await axiosInstance.post("/api/users/avatar", fd, {
+                          headers: { "Content-Type": "multipart/form-data" },
                         });
 
-                        const data = await res.json();
-                        if (!res.ok || !data.success) {
+                        const data = res.data;
+                        if (!data || !data.success) {
                           setMessage({ type: "error", text: data?.message || "Upload failed" });
                         } else {
-                          // update UI immediately
-                          setUser((u) => (u ? { ...u, avatar: data.url } : u));
+                          // prefer backend provided full url, fallback to building from returned path
+                          const avatarUrl = data.url ?? (data.path ? buildImageUrl(data.path) : null);
+
+                          // build updated user object if provided by backend
+                          let updatedUser: User | null = null;
+                          if (data.user) {
+                            updatedUser = { ...data.user, image: data.path ?? data.user.image, avatar: avatarUrl } as User;
+                          } else {
+                            updatedUser = (u => u ? { ...u, image: data.path ?? u.image, avatar: avatarUrl } : u)(user);
+                          }
+
+                          if (updatedUser) {
+                            setUser(updatedUser);
+                            try { document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/`; } catch {}
+                          }
+
                           setMessage({ type: "success", text: "Avatar uploaded" });
                         }
 
                         // release preview URL
                         URL.revokeObjectURL(preview);
-                      } catch (err) {
+                      } catch {
                         setMessage({ type: "error", text: "Upload error" });
                       } finally {
                         setSaving(false);

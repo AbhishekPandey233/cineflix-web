@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import axiosInstance from "@/lib/api/axios";
 
 type User = {
   _id: string;
@@ -26,17 +27,9 @@ export default function AdminUserByIdPage() {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/admin/users/${id}`, { credentials: "same-origin" })
-      .then(async (res) => {
-        const data = await res.json();
-        if (res.ok) {
-          // Backend returns { success, message, data }
-          setUser(data?.data || data);
-        } else {
-          setError(data?.message || "Failed to load user");
-        }
-      })
-      .catch((err) => setError(err?.message || "Request failed"))
+    axiosInstance.get(`/api/admin/users/${id}`)
+      .then((res) => setUser(res.data?.data || res.data))
+      .catch((err) => setError(err?.response?.data?.message || err?.message || "Request failed"))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -46,12 +39,9 @@ export default function AdminUserByIdPage() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/users/${id}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-      });
-      const json = await res.json();
-      if (res.ok) {
+      const res = await axiosInstance.delete(`/api/admin/users/${id}`);
+      const json = res.data;
+      if (res.status >= 200 && res.status < 300) {
         alert(json?.message || "User deleted");
         router.push("/admin/users");
       } else {

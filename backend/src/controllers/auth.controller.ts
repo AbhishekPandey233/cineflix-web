@@ -69,6 +69,29 @@ export class AuthController {
     }
   }
 
+  async getProfile(req: Request, res: Response) {
+    try {
+      const requester = (req as any).user;
+      const user = await userService.getUserById(requester.id);
+      return res.status(200).json({ success: true, data: user });
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({ success: false, message: error.message || "Internal Server Error" });
+    }
+  }
+
+  async logout(req: Request, res: Response) {
+    try {
+      // Clear cookies set by login
+      res.clearCookie("token", { httpOnly: true, secure: process.env.NODE_ENV === "production", path: "/" });
+      res.clearCookie("user", { path: "/" });
+      res.clearCookie("role", { path: "/" });
+
+      return res.status(200).json({ success: true, message: "Logged out" });
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({ success: false, message: error.message || "Internal Server Error" });
+    }
+  }
+
   async updateProfile(req: Request, res: Response) {
   try {
     const requester = (req as any).user;

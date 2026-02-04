@@ -61,6 +61,15 @@ export class UserService {
     return { token, user: userObj };
   }
 
+  async getUserById(id: string) {
+    const user = await userRepository.getUserById(id);
+    if (!user) throw new HttpError(404, "User not found");
+
+    const obj = (user as any).toObject ? (user as any).toObject() : user;
+    delete (obj as any).password;
+    return obj;
+  }
+
   async updateProfile(requester: any, id: string, updateData: any) {
   // user can only update self unless admin
   const isAdmin = requester?.role === "admin";
