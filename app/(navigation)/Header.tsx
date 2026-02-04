@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 function ProfileDrawer({
   open,
@@ -19,6 +20,58 @@ function ProfileDrawer({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
+
+  // Profile data when drawer opens
+  const [user, setUser] = useState<{ name?: string; email?: string; role?: string; avatar?: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return; // only fetch when opening
+    let mounted = true;
+
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/user/profile");
+        if (!res.ok) {
+          if (mounted) setUser(null);
+          return;
+        }
+        const data = await res.json();
+        if (mounted) setUser(data.data ?? null);
+      } catch (err) {
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchProfile();
+    return () => {
+      mounted = false;
+    };
+  }, [open]);
+
+  const initials = user?.name ? user.name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() : "U";
+
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        setUser(null);
+        onClose();
+        router.push("/login");
+        return;
+      }
+
+      const data = await res.json().catch(() => null);
+      alert(data?.message || "Logout failed");
+    } catch (err) {
+      alert("Network error. Please try again.");
+    }
+  };
 
   return (
     <>
@@ -57,31 +110,60 @@ function ProfileDrawer({
           {/* User Card */}
           <div className="rounded-xl bg-white/10 p-4 backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-r from-red-600 to-red-700 grid place-items-center text-white font-bold">
-                U
+              <div className="h-12 w-12 rounded-full overflow-hidden bg-gradient-to-r from-red-600 to-red-700 grid place-items-center text-white font-bold">
+                {loading ? (
+                  "…"
+                ) : user?.avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
               </div>
+
               <div>
-                <div className="text-white font-semibold">User</div>
-                <div className="text-white/60 text-sm">user@email.com</div>
+                <div className="text-white font-semibold">{loading ? "Loading..." : user?.name ?? "Guest"}</div>
+                <div className="text-white/60 text-sm">{loading ? "" : user?.email ?? ""}</div>
               </div>
             </div>
 
             <div className="mt-4 flex gap-2">
-              <Link
-                href="/user/profile"
-                onClick={onClose}
-                className="flex-1 h-9 inline-flex items-center justify-center rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
-              >
-                View Profile
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    href="/user/profile"
+                    onClick={onClose}
+                    className="flex-1 h-9 inline-flex items-center justify-center rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
+                  >
+                    View Profile
+                  </Link>
 
-              <Link
-                href="/logout"
-                onClick={onClose}
-                className="flex-1 h-9 inline-flex items-center justify-center rounded-md bg-white/10 text-sm font-semibold text-white hover:bg-white/20"
-              >
-                Logout
-              </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex-1 h-9 inline-flex items-center justify-center rounded-md bg-white/10 text-sm font-semibold text-white hover:bg-white/20"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={onClose}
+                    className="flex-1 h-9 inline-flex items-center justify-center rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
+                  >
+                    Log in
+                  </Link>
+
+                  <Link
+                    href="/register"
+                    onClick={onClose}
+                    className="flex-1 h-9 inline-flex items-center justify-center rounded-md bg-white/10 text-sm font-semibold text-white hover:bg-white/20"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
