@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import axiosInstance from "@/lib/api/axios";
 
 type User = {
@@ -105,7 +104,8 @@ export default function ProfilePage() {
                 <div className="relative">
                   {user.avatar ? (
                     <div className="relative h-28 w-28 rounded-full overflow-hidden">
-                      <Image src={user.avatar} alt="avatar" fill className="object-cover" sizes="112px" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
                     </div>
                   ) : (
                     <div className="h-28 w-28 rounded-full bg-gradient-to-r from-red-600 to-red-700 grid place-items-center text-white text-2xl font-bold">
