@@ -145,7 +145,6 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Bottom info panel (rounded like your image) */}
                 <div className="rounded-t-2xl bg-neutral-900/90 px-4 py-4 backdrop-blur-md">
                   <h3 className="text-lg font-bold text-white leading-6">{movie.title}</h3>
                   <p className="mt-1 text-sm text-white/70">{movie.genre}</p>
