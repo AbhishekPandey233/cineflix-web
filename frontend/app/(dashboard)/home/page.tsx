@@ -101,7 +101,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-red-500">Now Showing</h2>
-            <Link href="/movies" className="text-sm text-neutral-300 hover:text-red-500">
+            <Link href="/movies#now-showing" className="text-sm text-neutral-300 hover:text-red-500">
               View all
             </Link>
           </div>
@@ -132,12 +132,13 @@ export default function HomePage() {
 
                   {/* Buy button centered */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <button
+                    <Link
+                      href="/movies"
                       className="rounded-lg bg-sky-600/80 px-6 py-3 text-sm font-bold text-white backdrop-blur-md shadow-lg transition
                                  opacity-0 group-hover:opacity-100 group-hover:scale-105"
                     >
                       Buy Now
-                    </button>
+                    </Link>
                   </div>
                 </div>
 
@@ -153,7 +154,7 @@ export default function HomePage() {
 
                   <div className="mt-4">
                     <Link
-                      href={`/movies/${movie.id}`}
+                      href="/movies"
                       className="inline-flex w-full items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 transition"
                     >
                       Book Tickets
