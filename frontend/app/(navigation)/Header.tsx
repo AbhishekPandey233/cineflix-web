@@ -250,8 +250,8 @@ export default function Header() {
           <Link href="/movies" className="hover:text-red-500 transition">
             Movies
           </Link>
-          <Link href="/ticket-rate" className="hover:text-red-500 transition">
-            Ticket Rate
+          <Link href="/history" className="hover:text-red-500 transition">
+            History
           </Link>
         </nav>
 
