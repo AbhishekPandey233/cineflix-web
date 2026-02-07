@@ -1,0 +1,110 @@
+"use client";
+
+import React, { use } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { nowShowing } from "../data";
+
+function RatingStars({ score }: { score: number }) {
+  const full = Math.floor(score);
+  const stars = Array.from({ length: 5 }).map((_, i) => i < full);
+  return (
+    <div className="flex items-center gap-1 text-sm" aria-label={`Rating ${score}`}>
+      {stars.map((on, i) => (
+        <span key={i} className={on ? "text-yellow-400" : "text-white/20"}>
+          ★
+        </span>
+      ))}
+      <span className="ml-2 text-white/60">{score.toFixed(1)}</span>
+    </div>
+  );
+}
+
+export default function MovieDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const movie = nowShowing.find((m) => m.id === id);
+
+  if (!movie) {
+    return (
+      <main className="min-h-screen w-full bg-black text-white pt-14">
+        <div className="mx-auto max-w-4xl px-6 py-16">
+          <h1 className="text-3xl font-bold">Movie not found</h1>
+          <p className="mt-3 text-white/70">The movie you’re looking for isn’t available.</p>
+          <Link href="/movies" className="mt-6 inline-flex rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+            Back to Movies
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen w-full bg-black text-white pt-14">
+      <section className="mx-auto max-w-6xl px-6 py-10 md:px-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="relative overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10">
+            <div className="relative h-[520px] w-full">
+              <Image src={movie.img} alt={movie.title} fill className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
+              <div className="absolute left-4 top-4 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur-md">
+                {movie.rating}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+                {movie.year}
+              </span>
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+                {movie.duration}
+              </span>
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+                {movie.language}
+              </span>
+            </div>
+
+            <h1 className="mt-4 text-4xl font-extrabold tracking-tight">{movie.title}</h1>
+            <p className="mt-2 text-white/70">{movie.genre}</p>
+
+            <div className="mt-4">
+              <RatingStars score={movie.score} />
+            </div>
+
+            <p className="mt-6 text-white/70 leading-relaxed">{movie.synopsis}</p>
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="text-sm font-semibold text-white/80">Showtimes</div>
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {movie.showtimes.map((time) => (
+                  <button
+                    key={time}
+                    className="rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white/80 hover:bg-white/10"
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/seat-select"
+                className="inline-flex items-center justify-center rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-700"
+              >
+                Book Seat
+              </Link>
+              <Link
+                href="/movies"
+                className="inline-flex items-center justify-center rounded-md bg-white/10 px-6 py-3 text-sm font-semibold text-white hover:bg-white/20"
+              >
+                Back to Movies
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
