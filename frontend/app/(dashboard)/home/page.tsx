@@ -9,35 +9,35 @@ const sampleMovies = [
     title: "Aa Bata Aama",
     genre: "Nepali | Family,Drama",
     rating: "PG-13",
-    img: "/71meY6dAvjL.jpg",
-    year: 2025,
+    img: "/aabataahma.jpeg",
+    year: 2026,
     score: 4.2,
   },
   {
     id: "2",
-    title: "Ocean Whisper",
-    genre: "Drama | Romance",
+    title: "Avengers: Doomsday",
+    genre: "Sci-fi | Action",
     rating: "PG",
-    img: "/71meY6dAvjL.jpg",
-    year: 2024,
+    img: "/doomsday.png",
+    year: 2026,
     score: 4.0,
   },
   {
     id: "3",
-    title: "Skyline Fury",
+    title: "Avatar 3: Fire and Ash",
     genre: "Action | Adventure",
-    rating: "R",
-    img: "/71meY6dAvjL.jpg",
+    rating: "PG-13",
+    img: "/avatar.jpeg",
     year: 2025,
     score: 4.5,
   },
   {
     id: "4",
-    title: "The Last Reel",
-    genre: "Mystery",
-    rating: "PG-13",
-    img: "/71meY6dAvjL.jpg",
-    year: 2023,
+    title: "Alien Romulus",
+    genre: "Sci-fi | Horror",
+    rating: "R",
+    img: "/alien.webp",
+    year: 2026,
     score: 3.9,
   },
 ];
@@ -86,9 +86,12 @@ export default function HomePage() {
         </p>
 
         <div className="flex flex-wrap gap-4">
-          <button className="group relative overflow-hidden rounded-md bg-red-600 px-8 py-4 text-sm font-bold transition-all hover:bg-red-700 hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+          <Link
+            href="/movies"
+            className="group relative overflow-hidden rounded-md bg-red-600 px-8 py-4 text-sm font-bold transition-all hover:bg-red-700 hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]"
+          >
             <span className="relative z-10">BOOK TICKETS NOW</span>
-          </button>
+          </Link>
 
           <button className="rounded-md border border-neutral-700 bg-black/40 backdrop-blur-md px-8 py-4 text-sm font-bold transition-all hover:bg-neutral-900 hover:border-red-600">
             WATCH TRAILER
