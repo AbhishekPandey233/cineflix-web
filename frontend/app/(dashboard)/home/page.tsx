@@ -128,7 +128,6 @@ export default function HomePage() {
                   {/* subtle top fade */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
 
-                  {/* Rating badge (left top like poster text) */}
                   <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur-md">
                     {movie.rating}
                   </div>
