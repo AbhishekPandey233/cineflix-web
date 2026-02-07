@@ -196,7 +196,7 @@ function ProfileDrawer({
             </Link>
 
             <Link
-              href="/user/bookings"
+              href="/history"
               onClick={onClose}
               className="block rounded-lg bg-white/10 px-4 py-3 text-white hover:bg-white/20 transition"
             >
