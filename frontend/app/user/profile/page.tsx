@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import axiosInstance from "@/lib/api/axios";
 
@@ -20,6 +20,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   // Build full URL from backend-stored image path
   const buildImageUrl = (path?: string | null) => {
@@ -67,17 +69,40 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setMessage(null);
 
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim();
+    const originalName = (user?.name ?? "").trim();
+    const originalEmail = (user?.email ?? "").trim();
+
+    const hasChanges = normalizedName !== originalName || normalizedEmail !== originalEmail;
+    if (!hasChanges) {
+      setMessage({ type: "error", text: "Nothing to change" });
+      return;
+    }
+
+    setSaving(true);
+
     try {
-      const res = await axiosInstance.put("/api/user/profile", { name, email });
+      const res = await axiosInstance.put("/api/user/profile", { name: normalizedName, email: normalizedEmail });
       const data = res.data;
       if (!data || !data.success) {
         setMessage({ type: "error", text: data?.message || "Failed to update profile" });
       } else {
-        setUser(data.data);
-        try { document.cookie = `user=${encodeURIComponent(JSON.stringify(data.data))}; path=/`; } catch {}
+        const updated = data.data ?? {};
+        const avatarFromImage = updated.image ? buildImageUrl(updated.image) : undefined;
+        const mergedUser: User = {
+          ...user,
+          ...updated,
+          avatar: updated.avatar ?? avatarFromImage ?? user?.avatar,
+          image: updated.image ?? user?.image,
+        };
+
+        setUser(mergedUser);
+        setName(mergedUser.name ?? "");
+        setEmail(mergedUser.email ?? "");
+        try { document.cookie = `user=${encodeURIComponent(JSON.stringify(mergedUser))}; path=/`; } catch {}
         setMessage({ type: "success", text: "Profile updated" });
       }
     } catch {
@@ -88,6 +113,57 @@ export default function ProfilePage() {
   };
 
   const initials = (user?.name ?? "U").split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+
+  const clearPendingFile = () => {
+    setPendingFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!pendingFile) {
+      setMessage({ type: "error", text: "Please choose an image first" });
+      return;
+    }
+
+    setMessage(null);
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append("avatar", pendingFile);
+
+      const res = await axiosInstance.post("/api/users/avatar", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const data = res.data;
+      if (!data || !data.success) {
+        setMessage({ type: "error", text: data?.message || "Upload failed" });
+      } else {
+        const avatarUrl = data.url ?? (data.path ? buildImageUrl(data.path) : null);
+
+        let updatedUser: User | null = null;
+        if (data.user) {
+          updatedUser = { ...data.user, image: data.path ?? data.user.image, avatar: avatarUrl } as User;
+        } else {
+          updatedUser = (u => u ? { ...u, image: data.path ?? u.image, avatar: avatarUrl } : u)(user);
+        }
+
+        if (updatedUser) {
+          setUser(updatedUser);
+          try { document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/`; } catch {}
+        }
+
+        setMessage({ type: "success", text: "Avatar uploaded" });
+        clearPendingFile();
+      }
+    } catch {
+      setMessage({ type: "error", text: "Upload error" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white pt-14">
@@ -118,12 +194,43 @@ export default function ProfilePage() {
                   <div className="text-white font-semibold">{user.name}</div>
                   <div className="text-white/60 text-sm">{user.email}</div>
                 </div>
-                <div className="text-xs text-white/60">Role: <span className="text-white/80">{user.role ?? "user"}</span></div>
-
                 {/* Avatar upload UI */}
                 <div className="w-full">
                   <label className="mt-3 block text-sm text-white/70">Profile picture</label>
+                  <div className="mt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center justify-center rounded-md bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20"
+                    >
+                      Choose picture
+                    </button>
+                    {pendingFile && (
+                      <button
+                        type="button"
+                        onClick={clearPendingFile}
+                        className="inline-flex items-center justify-center rounded-md bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <span className="text-xs text-white/60">JPG, PNG up to 2MB</span>
+                  </div>
+                  {pendingFile && (
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="text-xs text-white/60">Selected: {pendingFile.name}</div>
+                      <button
+                        type="button"
+                        onClick={handleAvatarUpload}
+                        disabled={saving}
+                        className="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                      >
+                        {saving ? "Uploading…" : "Upload"}
+                      </button>
+                    </div>
+                  )}
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     onChange={async (e) => {
@@ -141,52 +248,10 @@ export default function ProfilePage() {
                         return;
                       }
 
-                      // preview
-                      const preview = URL.createObjectURL(file);
                       setMessage(null);
-
-                      // upload
-                      setSaving(true);
-                      try {
-                        const fd = new FormData();
-                        fd.append("avatar", file);
-
-                        const res = await axiosInstance.post("/api/users/avatar", fd, {
-                          headers: { "Content-Type": "multipart/form-data" },
-                        });
-
-                        const data = res.data;
-                        if (!data || !data.success) {
-                          setMessage({ type: "error", text: data?.message || "Upload failed" });
-                        } else {
-                          // prefer backend provided full url, fallback to building from returned path
-                          const avatarUrl = data.url ?? (data.path ? buildImageUrl(data.path) : null);
-
-                          // build updated user object if provided by backend
-                          let updatedUser: User | null = null;
-                          if (data.user) {
-                            updatedUser = { ...data.user, image: data.path ?? data.user.image, avatar: avatarUrl } as User;
-                          } else {
-                            updatedUser = (u => u ? { ...u, image: data.path ?? u.image, avatar: avatarUrl } : u)(user);
-                          }
-
-                          if (updatedUser) {
-                            setUser(updatedUser);
-                            try { document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/`; } catch {}
-                          }
-
-                          setMessage({ type: "success", text: "Avatar uploaded" });
-                        }
-
-                        // release preview URL
-                        URL.revokeObjectURL(preview);
-                      } catch {
-                        setMessage({ type: "error", text: "Upload error" });
-                      } finally {
-                        setSaving(false);
-                      }
+                      setPendingFile(file);
                     }}
-                    className="mt-2 w-full text-sm text-white"
+                    className="sr-only"
                   />
                 </div>
               </div>
@@ -213,7 +278,7 @@ export default function ProfilePage() {
                     {saving ? "Saving…" : "Save changes"}
                   </button>
 
-                  <Link href="/user/bookings" className="text-sm text-white/80 hover:underline">
+                  <Link href="/history" className="text-sm text-white/80 hover:underline">
                     View Bookings
                   </Link>
                 </div>
