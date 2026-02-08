@@ -36,6 +36,7 @@ export default function LoginForm() {
     register: registerReset,
     handleSubmit: handleResetSubmit,
     formState: { errors: resetErrors, isSubmitting: isResetSubmitting },
+    setError: setResetError,
     setValue: setResetValue,
   } = useForm<ResetPasswordData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -94,6 +95,9 @@ export default function LoginForm() {
         setStatus({ type: "success", text: res.message });
         setMode("login");
       } else {
+        if (res.message?.toLowerCase().includes("old password")) {
+          setResetError("password", { type: "server", message: "Old password entered" });
+        }
         setStatus({ type: "error", text: res.message });
       }
     });

@@ -7,7 +7,13 @@ export function middleware(req: NextRequest) {
   const token = req.cookies.get("token")?.value;
   const role = req.cookies.get("role")?.value;
 
-  if (pathname.startsWith("/user")) {
+  const requiresAuth =
+    pathname.startsWith("/user") ||
+    pathname.startsWith("/home") ||
+    pathname.startsWith("/movies") ||
+    pathname.startsWith("/history");
+
+  if (requiresAuth) {
     if (!token) {
       const url = req.nextUrl.clone();
       url.pathname = "/login";
@@ -33,5 +39,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/user/:path*"],
+  matcher: ["/admin/:path*", "/user/:path*", "/home/:path*", "/movies/:path*", "/history/:path*", "/home", "/movies", "/history"],
 };

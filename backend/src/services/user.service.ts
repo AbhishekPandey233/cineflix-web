@@ -121,6 +121,11 @@ export class UserService {
       throw new HttpError(400, "Reset token is invalid or expired");
     }
 
+    const isSamePassword = await bcryptjs.compare(newPassword, user.password);
+    if (isSamePassword) {
+      throw new HttpError(400, "Old password entered");
+    }
+
     const hashedPassword = await bcryptjs.hash(newPassword, BCRYPT_SALT_ROUNDS);
 
     await userRepository.updateUser(user._id.toString(), {
