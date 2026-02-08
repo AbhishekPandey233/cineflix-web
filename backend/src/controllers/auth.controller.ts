@@ -1,6 +1,6 @@
 //auth.controller.ts
 import { UserService } from "../services/user.service";
-import { CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
+import { CreateUserDTO, ForgotPasswordDTO, LoginUserDTO, ResetPasswordDTO } from "../dtos/user.dto";
 import { Request, Response } from "express";
 
 const userService = new UserService();
@@ -89,6 +89,59 @@ export class AuthController {
       return res.status(200).json({ success: true, message: "Logged out" });
     } catch (error: any) {
       return res.status(error.statusCode ?? 500).json({ success: false, message: error.message || "Internal Server Error" });
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const parsedData = ForgotPasswordDTO.safeParse(req.body);
+
+      if (!parsedData.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: parsedData.error,
+        });
+      }
+
+      const { token } = await userService.requestPasswordReset(parsedData.data.email);
+
+      return res.status(200).json({
+        success: true,
+        message: "If an account exists, a reset token has been generated",
+        data: token ? { resetToken: token } : undefined,
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const parsedData = ResetPasswordDTO.safeParse(req.body);
+
+      if (!parsedData.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: parsedData.error,
+        });
+      }
+
+      await userService.resetPassword(parsedData.data.token, parsedData.data.password);
+
+      return res.status(200).json({
+        success: true,
+        message: "Password reset successful",
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
     }
   }
 

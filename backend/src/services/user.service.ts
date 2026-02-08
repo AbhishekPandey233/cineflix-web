@@ -1,6 +1,7 @@
 //user.service.ts
 import bcryptjs from "bcryptjs";
 import * as jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
 import { UserRepository } from "../repositories/user.repository";
 import { HttpError } from "../errors/http-error";
@@ -93,5 +94,42 @@ export class UserService {
 
   return obj;
 }
+
+  async requestPasswordReset(email: string) {
+    const user = await userRepository.getUserByEmail(email);
+    if (!user) {
+      return { token: null };
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const expires = new Date(Date.now() + 1000 * 60 * 30);
+
+    await userRepository.updateUser(user._id.toString(), {
+      resetPasswordToken: tokenHash,
+      resetPasswordExpires: expires,
+    });
+
+    return { token: rawToken };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await userRepository.getUserByResetToken(tokenHash);
+
+    if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) {
+      throw new HttpError(400, "Reset token is invalid or expired");
+    }
+
+    const hashedPassword = await bcryptjs.hash(newPassword, BCRYPT_SALT_ROUNDS);
+
+    await userRepository.updateUser(user._id.toString(), {
+      password: hashedPassword,
+      resetPasswordToken: undefined,
+      resetPasswordExpires: undefined,
+    });
+
+    return true;
+  }
 
 }

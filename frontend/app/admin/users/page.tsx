@@ -16,6 +16,9 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
 
   const fetchUsers = async () => {
     setError("");
@@ -32,9 +35,38 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDelete = async (user: UserRow) => {
+    if (!user?._id) return;
+    const ok = window.confirm(`Delete ${user.name || "this user"}? This cannot be undone.`);
+    if (!ok) return;
+
+    setDeletingId(user._id);
+    setError("");
+    try {
+      await axiosInstance.delete(`/api/admin/users/${user._id}`);
+      setUsers((prev) => prev.filter((u) => u._id !== user._id));
+    } catch (err: unknown) {
+      // @ts-expect-error - axios error shape
+      const serverMsg = err?.response?.data?.message;
+      setError(serverMsg || (err instanceof Error ? err.message : "Failed to delete user"));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [users.length, page, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, users.length);
+  const pageUsers = users.slice(startIndex, endIndex);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -83,7 +115,7 @@ export default function AdminUsersPage() {
                   <td colSpan={3} className="px-6 py-12 text-center text-neutral-500 italic">No users found.</td>
                 </tr>
               ) : (
-                users.map((u) => (
+                pageUsers.map((u) => (
                   <tr key={u._id} className="group hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
@@ -117,6 +149,13 @@ export default function AdminUsersPage() {
                         >
                           Edit
                         </Link>
+                        <button
+                          onClick={() => handleDelete(u)}
+                          disabled={deletingId === u._id}
+                          className="px-3 py-1.5 text-xs font-bold rounded-md bg-red-500/15 text-red-400 border border-red-500/20 hover:bg-red-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingId === u._id ? "Deleting..." : "Delete"}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -124,6 +163,46 @@ export default function AdminUsersPage() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!loading && !error && users.length > 0 && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mt-6 text-sm text-neutral-400">
+          <div>
+            Showing <span className="text-white">{startIndex + 1}</span> to <span className="text-white">{endIndex}</span> of{" "}
+            <span className="text-white">{users.length}</span> users
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 rounded-md border border-white/10 bg-white/5 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Prev
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }).map((_, idx) => {
+                const num = idx + 1;
+                const isActive = num === page;
+                return (
+                  <button
+                    key={num}
+                    onClick={() => setPage(num)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition ${isActive ? "bg-white text-black border-white" : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"}`}
+                  >
+                    {num}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 rounded-md border border-white/10 bg-white/5 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>
