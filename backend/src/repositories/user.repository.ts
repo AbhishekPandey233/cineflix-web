@@ -8,6 +8,7 @@ export interface IUserRepository {
     getAllUsers(): Promise<IUser[]>;
     updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
     deleteUser(id: string): Promise<boolean>;
+    getUserByResetToken(tokenHash: string): Promise<IUser | null>;
 }
 export class UserRepository implements IUserRepository {
     async createUser(userData: Partial<IUser>): Promise<IUser> {
@@ -40,5 +41,10 @@ export class UserRepository implements IUserRepository {
     async deleteUser(id: string): Promise<boolean> {
         const result = await UserModel.findByIdAndDelete(id);
         return result ? true : false;
+    }
+
+    async getUserByResetToken(tokenHash: string): Promise<IUser | null> {
+        const user = await UserModel.findOne({ resetPasswordToken: tokenHash });
+        return user;
     }
 }
