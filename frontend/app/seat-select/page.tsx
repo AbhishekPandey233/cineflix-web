@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 
 const rows = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const seatsPerRow = 12;
+const maxSeats = 10;
+const prices = {
+  standard: 350,
+  premium: 500,
+  vip: 700,
+} as const;
 
 // Example tiers
 const premiumRows = new Set(["E", "F", "G"]);
@@ -13,12 +20,20 @@ function cn(...classes: Array<string | false | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+type SeatVariant = "standard" | "premium" | "vip";
+
 function Seat({
   label,
   variant,
+  selected,
+  disabled,
+  onClick,
 }: {
   label: string;
-  variant: "standard" | "premium" | "vip";
+  variant: SeatVariant;
+  selected: boolean;
+  disabled: boolean;
+  onClick: () => void;
 }) {
   const base =
     "h-8 w-8 sm:h-9 sm:w-9 rounded-md border text-[10px] sm:text-xs font-semibold grid place-items-center " +
@@ -31,11 +46,21 @@ function Seat({
       ? "bg-amber-500/15 border-amber-400/60 text-amber-100 hover:bg-amber-500/25"
       : "bg-white/5 border-white/15 text-white/85 hover:bg-white/10";
 
+  const selectedStyles =
+    "bg-emerald-500/25 border-emerald-400/70 text-emerald-100 hover:bg-emerald-500/30";
+
   return (
     <button
-      className={cn(base, styles, "hover:scale-[1.03] active:scale-[0.98]")}
+      className={cn(
+        base,
+        selected ? selectedStyles : styles,
+        disabled && !selected && "opacity-50 cursor-not-allowed",
+        !disabled && "hover:scale-[1.03] active:scale-[0.98]"
+      )}
       aria-label={`Seat ${label}`}
       type="button"
+      disabled={disabled && !selected}
+      onClick={onClick}
     >
       {label}
     </button>
@@ -47,6 +72,51 @@ function LegendDot({ className }: { className: string }) {
 }
 
 export default function SeatSelectionPage() {
+  const [selectedSeats, setSelectedSeats] = useState<
+    Array<{ label: string; variant: SeatVariant }>
+  >([]);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const selectedSet = useMemo(
+    () => new Set(selectedSeats.map((seat) => seat.label)),
+    [selectedSeats]
+  );
+
+  const counts = useMemo(() => {
+    return selectedSeats.reduce(
+      (acc, seat) => {
+        acc[seat.variant] += 1;
+        return acc;
+      },
+      { standard: 0, premium: 0, vip: 0 }
+    );
+  }, [selectedSeats]);
+
+  const total =
+    counts.standard * prices.standard +
+    counts.premium * prices.premium +
+    counts.vip * prices.vip;
+
+  const limitReached = selectedSeats.length >= maxSeats;
+
+  const toggleSeat = (label: string, variant: SeatVariant) => {
+    setSelectedSeats((prev) => {
+      const isSelected = prev.some((seat) => seat.label === label);
+      if (isSelected) {
+        return prev.filter((seat) => seat.label !== label);
+      }
+      if (prev.length >= maxSeats) {
+        return prev;
+      }
+      return [...prev, { label, variant }];
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedSeats([]);
+    setShowClearConfirm(false);
+  };
+
   return (
     <main className="min-h-screen w-full bg-black text-white">
       {/* Top gradient */}
@@ -119,7 +189,7 @@ export default function SeatSelectionPage() {
             {/* Seating grid */}
             <div className="space-y-3">
               {rows.map((row) => {
-                const variant = premiumRows.has(row)
+                const variant: SeatVariant = premiumRows.has(row)
                   ? "premium"
                   : vipRows.has(row)
                   ? "vip"
@@ -137,6 +207,8 @@ export default function SeatSelectionPage() {
                         {Array.from({ length: seatsPerRow }).map((_, i) => {
                           const seatNumber = i + 1;
                           const label = `${row}${seatNumber}`;
+                          const isSelected = selectedSet.has(label);
+                          const isDisabled = !isSelected && selectedSeats.length >= maxSeats;
 
                           // aisle after seat 6 (for 12 total)
                           const isAisle = seatNumber === 7;
@@ -146,7 +218,13 @@ export default function SeatSelectionPage() {
                               {isAisle && (
                                 <div className="mx-2 hidden sm:block h-8 sm:h-9 w-[10px] rounded-full bg-white/5 border border-white/10" />
                               )}
-                              <Seat label={label} variant={variant} />
+                              <Seat
+                                label={label}
+                                variant={variant}
+                                selected={isSelected}
+                                disabled={isDisabled}
+                                onClick={() => toggleSeat(label, variant)}
+                              />
                             </div>
                           );
                         })}
@@ -172,24 +250,65 @@ export default function SeatSelectionPage() {
           <aside className="lg:sticky lg:top-6 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
               <h2 className="text-sm font-semibold text-white/85">Your Selection</h2>
-              <div className="mt-3 text-sm text-white/60">No seats selected</div>
+              {selectedSeats.length === 0 ? (
+                <div className="mt-3 text-sm text-white/60">No seats selected</div>
+              ) : (
+                <div className="mt-3 space-y-2 text-sm text-white/70">
+                  <div>{selectedSeats.length} seats selected</div>
+                  <div className="text-xs text-white/50">
+                    {selectedSeats.map((seat) => seat.label).join(", ")}
+                  </div>
+                  <div className="text-[11px] text-white/45">
+                    Max {maxSeats} seats per booking
+                  </div>
+                  {limitReached && (
+                    <div className="text-[11px] text-amber-300/90">
+                      Seat limit reached. Deselect to choose another.
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="mt-5 space-y-2 text-xs text-white/60">
                 <div className="flex items-center justify-between">
-                  <span>Tickets</span>
-                  <span>—</span>
+                  <span>Standard</span>
+                  <span>
+                    {counts.standard} x {prices.standard}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Premium</span>
+                  <span>
+                    {counts.premium} x {prices.premium}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>VIP</span>
+                  <span>
+                    {counts.vip} x {prices.vip}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Total</span>
-                  <span className="text-white/80">—</span>
+                  <span className="text-white/80">{total}</span>
                 </div>
               </div>
 
               <button
                 className="mt-5 w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:hover:bg-red-600"
                 type="button"
+                disabled={selectedSeats.length === 0}
               >
                 Continue
+              </button>
+
+              <button
+                className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5"
+                type="button"
+                disabled={selectedSeats.length === 0}
+                onClick={() => setShowClearConfirm(true)}
+              >
+                Deselect All
               </button>
 
               <p className="mt-3 text-[11px] text-white/45">
@@ -216,6 +335,37 @@ export default function SeatSelectionPage() {
           </button>
         </div>
       </section>
+
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
+          <div
+            className="absolute inset-0 bg-black/70"
+            onClick={() => setShowClearConfirm(false)}
+          />
+          <div className="relative w-full max-w-sm rounded-2xl border border-blue-200 bg-white p-5 shadow-xl">
+            <h3 className="text-base font-semibold text-blue-900">Clear selection?</h3>
+            <p className="mt-2 text-sm text-blue-700">
+              This will deselect all chosen seats.
+            </p>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                type="button"
+                onClick={() => setShowClearConfirm(false)}
+              >
+                Go Back
+              </button>
+              <button
+                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700"
+                type="button"
+                onClick={clearSelection}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
