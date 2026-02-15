@@ -2,7 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { comingSoon, nowShowing } from "./data";
+import { useEffect, useState } from "react";
+import axiosInstance from "@/lib/api/axios";
+import { API } from "@/lib/api/endpoints";
+
+type Movie = {
+  _id: string;
+  title: string;
+  genre: string;
+  rating: string;
+  img: string;
+  year: number;
+  score: number;
+  duration: string;
+  synopsis: string;
+  language: string;
+  status: string;
+};
 
 function RatingStars({ score }: { score: number }) {
   const full = Math.floor(score);
@@ -20,6 +36,36 @@ function RatingStars({ score }: { score: number }) {
 }
 
 export default function MoviesPage() {
+  const [nowShowing, setNowShowing] = useState<Movie[]>([]);
+  const [comingSoon, setComingSoon] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const [showing, coming] = await Promise.all([
+          axiosInstance.get(API.MOVIES.NOW_SHOWING),
+          axiosInstance.get(API.MOVIES.COMING_SOON),
+        ]);
+        setNowShowing(showing.data.data || []);
+        setComingSoon(coming.data.data || []);
+      } catch (error) {
+        console.error("Error fetching movies:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen w-full bg-black text-white pt-14 flex items-center justify-center">
+        <div>Loading...</div>
+      </main>
+    );
+  }
   return (
     <main className="min-h-screen w-full bg-black text-white pt-14">
       {/* Hero */}
@@ -57,8 +103,8 @@ export default function MoviesPage() {
         <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {nowShowing.map((movie) => (
             <Link
-              key={movie.id}
-              href={`/movies/${movie.id}`}
+              key={movie._id}
+              href={`/movies/${movie._id}`}
               className="group relative overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 transition hover:-translate-y-1 hover:ring-white/20"
             >
               <div className="relative h-[420px] w-full">
@@ -107,10 +153,10 @@ export default function MoviesPage() {
 
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {comingSoon.map((movie) => (
-              <div key={movie.id} className="rounded-xl bg-black/40 p-4 ring-1 ring-white/10">
+              <div key={movie._id} className="rounded-xl bg-black/40 p-4 ring-1 ring-white/10">
                 <div className="text-white font-semibold">{movie.title}</div>
                 <div className="mt-2 inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
-                  {movie.date}
+                  {movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : "TBA"}
                 </div>
               </div>
             ))}
