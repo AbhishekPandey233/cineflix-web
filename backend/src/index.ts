@@ -8,6 +8,9 @@ import authRoutes from "./routes/auth.route";
 import userProfileRoutes from "./routes/user.profile.route";
 import { connectDatabase } from "./database/mongodb";
 import userAvatarRoutes from "./routes/user.avatar.route";
+import bookingRoutes from "./routes/booking.route";
+import movieRoutes from "./routes/movie.route";
+import { seedMovies } from "./seeds/movies.seed";
 
 import { PORT } from "./config"; 
 
@@ -27,6 +30,8 @@ app.use("/api/users", userAvatarRoutes);
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userProfileRoutes);
+app.use("/api/movies", movieRoutes);
+app.use("/api", bookingRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   return res.status(200).json({
@@ -41,6 +46,7 @@ app.use("/api/admin", adminUserRoutes);
 async function startServer() {
   try {
     await connectDatabase();
+    await seedMovies();
 
     app.listen(PORT, () => {
       console.log(`✅ Server running: http://localhost:${PORT}`);
