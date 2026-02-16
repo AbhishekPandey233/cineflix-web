@@ -180,7 +180,13 @@ export class BookingController {
 			}
 
 			const bookings = await BookingModel.find({ userId, status: "confirmed" })
-				.populate("showtimeId")
+				.populate({
+					path: "showtimeId",
+					populate: {
+						path: "movieId",
+						select: "title"
+					}
+				})
 				.sort({ createdAt: -1 })
 				.lean();
 
@@ -222,6 +228,70 @@ export class BookingController {
 			}
 
 			booking.status = "cancelled";
+			booking.canceledBy = "user";
+			await booking.save();
+
+			return res.status(200).json({
+				success: true,
+				message: "Booking cancelled successfully",
+				data: booking,
+			});
+		} catch (error: any) {
+			return res.status(error.statusCode ?? 500).json({
+				success: false,
+				message: error.message || "Internal Server Error",
+			});
+		}
+	}
+
+	async adminGetAllBookings(req: Request, res: Response) {
+		try {
+			const bookings = await BookingModel.find()
+				.populate({
+					path: "showtimeId",
+					populate: {
+						path: "movieId",
+						select: "title"
+					}
+				})
+				.populate("userId", "email fullName")
+				.sort({ createdAt: -1 })
+				.lean();
+
+			return res.status(200).json({
+				success: true,
+				data: bookings,
+			});
+		} catch (error: any) {
+			return res.status(error.statusCode ?? 500).json({
+				success: false,
+				message: error.message || "Internal Server Error",
+			});
+		}
+	}
+
+	async adminCancelBooking(req: Request, res: Response) {
+		try {
+			const bookingId = String(req.params.bookingId);
+
+			const booking = await BookingModel.findById(bookingId);
+
+			if (!booking) {
+				return res.status(404).json({
+					success: false,
+					message: "Booking not found",
+				});
+			}
+
+			if (booking.status === "cancelled") {
+				return res.status(400).json({
+					success: false,
+					message: "Booking is already cancelled",
+				});
+			}
+
+			booking.status = "cancelled";
+			booking.canceledBy = "admin";
 			await booking.save();
 
 			return res.status(200).json({
