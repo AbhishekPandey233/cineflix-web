@@ -20,5 +20,20 @@ export const API = {
         CREATE: "/api/bookings",
         USER_HISTORY: "/api/bookings/user/history",
         CANCEL: (bookingId: string | number) => `/api/bookings/${bookingId}`,
-    }
+    },
+    ADMIN: {
+        MOVIES: {
+            ALL: "/api/admin/movies",
+            DETAILS: (id: string | number) => `/api/admin/movies/${id}`,
+        },
+        SHOWTIMES: {
+            BY_MOVIE: (movieId: string | number) => `/api/admin/showtimes/movie/${movieId}`,
+            DETAILS: (id: string | number) => `/api/admin/showtimes/${id}`,
+            CREATE: "/api/admin/showtimes",
+        },
+        BOOKINGS: {
+            ALL: "/api/admin/bookings",
+            CANCEL: (bookingId: string | number) => `/api/admin/bookings/${bookingId}`,
+        },
+    },
 }
