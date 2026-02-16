@@ -9,7 +9,10 @@ type Booking = {
   _id: string;
   showtimeId: {
     _id: string;
-    movieId: string;
+    movieId: {
+      _id: string;
+      title: string;
+    };
     hallId: string;
     hallName: string;
     startTime: string;
@@ -18,6 +21,7 @@ type Booking = {
   seats: string[];
   totalPrice: number;
   status: string;
+  canceledBy?: "user" | "admin";
   createdAt: string;
 };
 
@@ -115,7 +119,7 @@ export default function HistoryPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold text-white">
-                        Booking #{booking._id.slice(-8)}
+                        {booking.showtimeId.movieId.title}
                       </h3>
                       <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-100">
                         {booking.status.toUpperCase()}
@@ -123,6 +127,10 @@ export default function HistoryPage() {
                     </div>
 
                     <div className="mt-3 space-y-2 text-sm text-white/70">
+                      <div>
+                        <span className="text-white/60">Booking ID: </span>
+                        {booking._id.slice(-8)}
+                      </div>
                       <div>
                         <span className="text-white/60">Showtime: </span>
                         {new Date(booking.showtimeId.startTime).toLocaleString()}
@@ -139,6 +147,13 @@ export default function HistoryPage() {
                         <span className="text-white/60">Booked on: </span>
                         {new Date(booking.createdAt).toLocaleDateString()}
                       </div>
+                      {booking.canceledBy === "admin" && (
+                        <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                          <p className="text-sm text-amber-200">
+                            Canceled by admin sorry for the inconvenience
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -151,21 +166,32 @@ export default function HistoryPage() {
                 </div>
 
                 <div className="mt-4 flex gap-3 border-t border-white/10 pt-4">
-                  <Link
-                    href="/movies"
-                    className="inline-flex items-center justify-center rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20"
-                  >
-                    Book Again
-                  </Link>
-                  <button className="inline-flex items-center justify-center rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20">
-                    Download Ticket
-                  </button>
-                  <button
-                    onClick={() => setSelectedCancelBookingId(booking._id)}
-                    className="inline-flex items-center justify-center rounded-lg bg-red-600/20 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-600/30"
-                  >
-                    Cancel Booking
-                  </button>
+                  {booking.status === "confirmed" ? (
+                    <>
+                      <Link
+                        href="/movies"
+                        className="inline-flex items-center justify-center rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20"
+                      >
+                        Book Again
+                      </Link>
+                      <button className="inline-flex items-center justify-center rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20">
+                        Download Ticket
+                      </button>
+                      <button
+                        onClick={() => setSelectedCancelBookingId(booking._id)}
+                        className="inline-flex items-center justify-center rounded-lg bg-red-600/20 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-600/30"
+                      >
+                        Cancel Booking
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href="/movies"
+                      className="inline-flex items-center justify-center rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20"
+                    >
+                      Book Again
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}
