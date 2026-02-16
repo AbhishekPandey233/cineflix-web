@@ -4,6 +4,9 @@ import "dotenv/config";
 import express, { Application, Request, Response } from "express";
 import bodyParser from "body-parser";
 import adminUserRoutes from "./routes/admin.user.route";
+import adminMovieRoutes from "./routes/admin.movie.route";
+import adminShowtimeRoutes from "./routes/admin.showtime.route";
+import adminBookingRoutes from "./routes/admin.booking.route";
 import authRoutes from "./routes/auth.route";
 import userProfileRoutes from "./routes/user.profile.route";
 import { connectDatabase } from "./database/mongodb";
@@ -42,6 +45,9 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/admin", adminUserRoutes);
+app.use("/api/admin", adminMovieRoutes);
+app.use("/api/admin", adminShowtimeRoutes);
+app.use("/api/admin", adminBookingRoutes);
 
 async function startServer() {
   try {

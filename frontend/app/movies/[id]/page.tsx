@@ -28,6 +28,19 @@ type Showtime = {
   price: number;
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || "http://localhost:5000";
+
+const resolveImageUrl = (path: string): string => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  // If it's a backend upload path, prefix with API base URL
+  if (path.includes("/uploads/")) {
+    return `${API_BASE_URL}${path}`;
+  }
+  // Otherwise it's a static public file, return as-is
+  return path;
+};
+
 function RatingStars({ score }: { score: number }) {
   const full = Math.floor(score);
   const stars = Array.from({ length: 5 }).map((_, i) => i < full);
@@ -88,7 +101,7 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <div className="relative overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10">
             <div className="relative h-[520px] w-full">
-              <Image src={movie.img} alt={movie.title} fill className="object-cover" />
+              <Image src={resolveImageUrl(movie.img)} alt={movie.title} fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
               <div className="absolute left-4 top-4 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur-md">
                 {movie.rating}

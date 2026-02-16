@@ -62,6 +62,19 @@ export const seedMovies = async () => {
         status: "now-showing",
       },
       {
+        title: "Godzilla",
+        genre: "Sci-fi | Action | Monster",
+        rating: "PG-13",
+        img: "/godzilla.jpeg",
+        year: 2026,
+        score: 4.6,
+        duration: "2h 14m",
+        synopsis:
+          "An ancient atomic titan awakens to challenge humanity's dominance in an epic battle for Earth's future.",
+        language: "English",
+        status: "now-showing",
+      },
+      {
         title: "Velvet Storm",
         genre: "Drama | Thriller",
         rating: "PG-13",
