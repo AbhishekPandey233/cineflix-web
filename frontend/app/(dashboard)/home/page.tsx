@@ -1,46 +1,32 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import axiosInstance from "@/lib/api/axios";
+import { API } from "@/lib/api/endpoints";
 
-const sampleMovies = [
-  {
-    id: "1",
-    title: "Aa Bata Aama",
-    genre: "Nepali | Family,Drama",
-    rating: "PG-13",
-    img: "/aabataahma.jpeg",
-    year: 2026,
-    score: 4.2,
-  },
-  {
-    id: "2",
-    title: "Avengers: Doomsday",
-    genre: "Sci-fi | Action",
-    rating: "PG",
-    img: "/doomsday.png",
-    year: 2026,
-    score: 4.0,
-  },
-  {
-    id: "3",
-    title: "Avatar 3: Fire and Ash",
-    genre: "Action | Adventure",
-    rating: "PG-13",
-    img: "/avatar.jpeg",
-    year: 2025,
-    score: 4.5,
-  },
-  {
-    id: "4",
-    title: "Alien Romulus",
-    genre: "Sci-fi | Horror",
-    rating: "R",
-    img: "/alien.webp",
-    year: 2026,
-    score: 3.9,
-  },
-];
+type Movie = {
+  _id: string;
+  title: string;
+  genre: string;
+  rating: string;
+  img: string;
+  year: number;
+  score: number;
+};
+
+const resolveImageUrl = (path: string): string => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  // If it's a backend upload path, prefix with API base URL
+  if (path.includes("/uploads/")) {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+    return `${apiBase}${path}`;
+  }
+  // Otherwise it's a static public file, return as-is
+  return path;
+};
 
 function RatingStars({ score }: { score: number }) {
   const full = Math.floor(score);
@@ -58,6 +44,23 @@ function RatingStars({ score }: { score: number }) {
 }
 
 export default function HomePage() {
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const res = await axiosInstance.get(API.MOVIES.NOW_SHOWING);
+        setMovies(res.data?.data ?? []);
+      } catch (error) {
+        console.error("Failed to fetch now-showing movies:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, []);
   return (
 <main className="relative min-h-screen w-full overflow-hidden bg-black text-white pt-14">
       {/* Cinematic Gradient Overlay */}
@@ -99,7 +102,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Now Showing Grid */}
+        {/* Now Showing Grid */}
       <section className="relative z-10 mt-12 px-6 md:px-20 pb-16">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
@@ -110,59 +113,65 @@ export default function HomePage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {sampleMovies.map((movie) => (
-              <article
-                key={movie.id}
-                className="group relative overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 transition hover:-translate-y-1 hover:ring-white/20"
-              >
-                {/* Poster */}
-                <div className="relative h-[420px] w-full">
-                  <Image
-                    src={movie.img}
-                    alt={movie.title}
-                    fill
-                    className="object-cover"
-                  />
+            {loading ? (
+              <div className="col-span-full text-center py-8 text-neutral-400">Loading now-showing movies...</div>
+            ) : movies.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-neutral-400">No movies currently showing</div>
+            ) : (
+              movies.map((movie) => (
+                <article
+                  key={movie._id}
+                  className="group relative overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 transition hover:-translate-y-1 hover:ring-white/20"
+                >
+                  {/* Poster */}
+                  <div className="relative h-[420px] w-full">
+                    <Image
+                      src={resolveImageUrl(movie.img)}
+                      alt={movie.title}
+                      fill
+                      className="object-cover"
+                    />
 
-                  {/* subtle top fade */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
+                    {/* subtle top fade */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
 
-                  <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur-md">
-                    {movie.rating}
+                    <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur-md">
+                      {movie.rating}
+                    </div>
+
+                    {/* Buy button centered */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Link
+                        href="/movies"
+                        className="rounded-lg bg-sky-600/80 px-6 py-3 text-sm font-bold text-white backdrop-blur-md shadow-lg transition
+                                   opacity-0 group-hover:opacity-100 group-hover:scale-105"
+                      >
+                        Buy Now
+                      </Link>
+                    </div>
                   </div>
 
-                  {/* Buy button centered */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Link
-                      href="/movies"
-                      className="rounded-lg bg-sky-600/80 px-6 py-3 text-sm font-bold text-white backdrop-blur-md shadow-lg transition
-                                 opacity-0 group-hover:opacity-100 group-hover:scale-105"
-                    >
-                      Buy Now
-                    </Link>
-                  </div>
-                </div>
+                  <div className="rounded-t-2xl bg-neutral-900/90 px-4 py-4 backdrop-blur-md">
+                    <h3 className="text-lg font-bold text-white leading-6">{movie.title}</h3>
+                    <p className="mt-1 text-sm text-white/70">{movie.genre}</p>
 
-                <div className="rounded-t-2xl bg-neutral-900/90 px-4 py-4 backdrop-blur-md">
-                  <h3 className="text-lg font-bold text-white leading-6">{movie.title}</h3>
-                  <p className="mt-1 text-sm text-white/70">{movie.genre}</p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <RatingStars score={movie.score} />
+                      <span className="text-sm text-white/60">{movie.year}</span>
+                    </div>
 
-                  <div className="mt-3 flex items-center justify-between">
-                    <RatingStars score={movie.score} />
-                    <span className="text-sm text-white/60">{movie.year}</span>
+                    <div className="mt-4">
+                      <Link
+                        href="/movies"
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 transition"
+                      >
+                        Book Tickets
+                      </Link>
+                    </div>
                   </div>
-
-                  <div className="mt-4">
-                    <Link
-                      href="/movies"
-                      className="inline-flex w-full items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 transition"
-                    >
-                      Book Tickets
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))
+            )}
           </div>
 
           {/* Extras */}
