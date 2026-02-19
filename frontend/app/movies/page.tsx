@@ -13,6 +13,7 @@ type Movie = {
   rating: string;
   img: string;
   year: number;
+  releaseDate?: string;
   score: number;
   duration: string;
   synopsis: string;
