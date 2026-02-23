@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { BookingModel } from "../models/Booking";
 import { HallId, ShowtimeModel } from "../models/Showtime";
+import { FRONTEND_URL, KHALTI_BASE_URL, KHALTI_SECRET_KEY } from "../config";
 
 type HallLayout = {
 	hallId: HallId;
@@ -32,6 +33,25 @@ const buildSeatIds = (layout: HallLayout) => {
 		}
 	}
 	return seats;
+};
+
+const callKhaltiApi = async <T>(path: string, payload: Record<string, unknown>): Promise<T> => {
+	const response = await fetch(`${KHALTI_BASE_URL}${path}`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Key ${KHALTI_SECRET_KEY}`,
+		},
+		body: JSON.stringify(payload),
+	});
+
+	const data = (await response.json()) as T & { detail?: string };
+
+	if (!response.ok) {
+		throw new Error((data as { detail?: string }).detail || "Khalti request failed");
+	}
+
+	return data;
 };
 
 export class BookingController {
@@ -235,6 +255,195 @@ export class BookingController {
 				success: true,
 				message: "Booking cancelled successfully",
 				data: booking,
+			});
+		} catch (error: any) {
+			return res.status(error.statusCode ?? 500).json({
+				success: false,
+				message: error.message || "Internal Server Error",
+			});
+		}
+	}
+
+	async initiateKhaltiPayment(req: Request, res: Response) {
+		try {
+			if (!KHALTI_SECRET_KEY) {
+				return res.status(500).json({
+					success: false,
+					message: "Khalti is not configured. Missing KHALTI_SECRET_KEY",
+				});
+			}
+
+			const authUser = (req as any).user as {
+				id?: string;
+				email?: string;
+				name?: string;
+				firstName?: string;
+				lastName?: string;
+			};
+			const userId = authUser?.id;
+			const bookingId = String(req.params.bookingId);
+
+			if (!userId) {
+				return res.status(401).json({ success: false, message: "Unauthorized" });
+			}
+
+			const booking = await BookingModel.findOne({
+				_id: bookingId,
+				userId,
+				status: "confirmed",
+			}).populate({
+				path: "showtimeId",
+				populate: {
+					path: "movieId",
+					select: "title",
+				},
+			});
+
+			if (!booking) {
+				return res.status(404).json({
+					success: false,
+					message: "Booking not found",
+				});
+			}
+
+			if (booking.paymentStatus === "paid") {
+				return res.status(400).json({
+					success: false,
+					message: "Booking is already paid",
+				});
+			}
+
+			const amountInPaisa = Math.round(Number(booking.totalPrice || 0) * 100);
+			if (amountInPaisa <= 0) {
+				return res.status(400).json({
+					success: false,
+					message: "Invalid booking amount",
+				});
+			}
+
+			const movieTitle =
+				(booking.showtimeId as any)?.movieId?.title ||
+				"CineFlix Ticket";
+
+			const customerName =
+				[authUser?.firstName, authUser?.lastName].filter(Boolean).join(" ") ||
+				authUser?.name ||
+				"CineFlix User";
+
+			const returnUrl = `${FRONTEND_URL}/history?bookingId=${booking._id}`;
+
+			const khaltiResponse = await callKhaltiApi<{
+				pidx: string;
+				payment_url: string;
+			}>('/api/v2/epayment/initiate/', {
+				return_url: returnUrl,
+				website_url: FRONTEND_URL,
+				amount: amountInPaisa,
+				purchase_order_id: String(booking._id),
+				purchase_order_name: `${movieTitle} Ticket`,
+				customer_info: {
+					name: customerName,
+					email: authUser?.email || "",
+				},
+			});
+
+			booking.paymentStatus = "pending";
+			booking.paymentProvider = "khalti";
+			booking.khaltiPidx = khaltiResponse.pidx;
+			await booking.save();
+
+			return res.status(200).json({
+				success: true,
+				data: {
+					paymentUrl: khaltiResponse.payment_url,
+					pidx: khaltiResponse.pidx,
+				},
+			});
+		} catch (error: any) {
+			return res.status(error.statusCode ?? 500).json({
+				success: false,
+				message: error.message || "Internal Server Error",
+			});
+		}
+	}
+
+	async verifyKhaltiPayment(req: Request, res: Response) {
+		try {
+			if (!KHALTI_SECRET_KEY) {
+				return res.status(500).json({
+					success: false,
+					message: "Khalti is not configured. Missing KHALTI_SECRET_KEY",
+				});
+			}
+
+			const userId = (req as any).user?.id;
+			const bookingId = String(req.params.bookingId);
+			const { pidx } = req.body as { pidx?: string };
+
+			if (!userId) {
+				return res.status(401).json({ success: false, message: "Unauthorized" });
+			}
+
+			if (!pidx) {
+				return res.status(400).json({
+					success: false,
+					message: "pidx is required",
+				});
+			}
+
+			const booking = await BookingModel.findOne({
+				_id: bookingId,
+				userId,
+				status: "confirmed",
+			});
+
+			if (!booking) {
+				return res.status(404).json({
+					success: false,
+					message: "Booking not found",
+				});
+			}
+
+			if (booking.khaltiPidx && booking.khaltiPidx !== pidx) {
+				return res.status(400).json({
+					success: false,
+					message: "Invalid payment reference for this booking",
+				});
+			}
+
+			const lookupResponse = await callKhaltiApi<{
+				status: string;
+				transaction_id?: string;
+			}>('/api/v2/epayment/lookup/', { pidx });
+
+			if (lookupResponse.status === "Completed") {
+				booking.paymentStatus = "paid";
+				booking.paymentProvider = "khalti";
+				booking.khaltiPidx = pidx;
+				booking.paidAt = new Date();
+				await booking.save();
+
+				return res.status(200).json({
+					success: true,
+					message: "Payment verified successfully",
+					data: {
+						bookingId: booking._id,
+						paymentStatus: booking.paymentStatus,
+						provider: booking.paymentProvider,
+					},
+				});
+			}
+
+			booking.paymentStatus = "unpaid";
+			await booking.save();
+
+			return res.status(400).json({
+				success: false,
+				message: `Payment not completed. Current status: ${lookupResponse.status}`,
+				data: {
+					bookingId: booking._id,
+					paymentStatus: booking.paymentStatus,
+				},
 			});
 		} catch (error: any) {
 			return res.status(error.statusCode ?? 500).json({

@@ -2,6 +2,8 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export type BookingStatus = "confirmed" | "cancelled";
 export type CanceledBy = "user" | "admin";
+export type PaymentStatus = "unpaid" | "pending" | "paid";
+export type PaymentProvider = "khalti";
 
 export interface IBooking extends Document {
 	userId?: mongoose.Types.ObjectId;
@@ -10,6 +12,10 @@ export interface IBooking extends Document {
 	totalPrice: number;
 	status: BookingStatus;
 	canceledBy?: CanceledBy;
+	paymentStatus: PaymentStatus;
+	paymentProvider?: PaymentProvider;
+	khaltiPidx?: string;
+	paidAt?: Date;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -22,6 +28,10 @@ const BookingSchema: Schema = new Schema<IBooking>(
 		totalPrice: { type: Number, default: 0 },
 		status: { type: String, enum: ["confirmed", "cancelled"], default: "confirmed" },
 		canceledBy: { type: String, enum: ["user", "admin"], default: undefined },
+		paymentStatus: { type: String, enum: ["unpaid", "pending", "paid"], default: "unpaid" },
+		paymentProvider: { type: String, enum: ["khalti"], default: undefined },
+		khaltiPidx: { type: String, default: undefined },
+		paidAt: { type: Date, default: undefined },
 	},
 	{
 		timestamps: true,

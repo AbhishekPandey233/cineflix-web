@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import axiosInstance from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
 
@@ -21,25 +22,72 @@ type Booking = {
   seats: string[];
   totalPrice: number;
   status: string;
+  paymentStatus?: "unpaid" | "pending" | "paid";
   canceledBy?: "user" | "admin";
   createdAt: string;
 };
 
 export default function HistoryPage() {
+  const searchParams = useSearchParams();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedCancelBookingId, setSelectedCancelBookingId] = useState<string | null>(null);
   const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
+  const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [paymentNotice, setPaymentNotice] = useState("");
+
+  const fetchBookings = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(API.BOOKINGS.USER_HISTORY);
+      setBookings(response.data.data || []);
+      setError("");
+    } catch (err: unknown) {
+      let errorMessage = "Failed to load bookings";
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          errorMessage = axiosErr.response.data.message;
+        }
+      }
+      setError(errorMessage);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchBookings = async () => {
+    const loadBookings = async () => {
+      await fetchBookings();
+      setLoading(false);
+    };
+
+    loadBookings();
+  }, [fetchBookings]);
+
+  useEffect(() => {
+    const bookingId = searchParams.get("bookingId");
+    const pidx = searchParams.get("pidx");
+    const status = searchParams.get("status");
+
+    if (!bookingId || !pidx) {
+      return;
+    }
+
+    if (status && status.toLowerCase() !== "completed") {
+      setError("Payment was not completed.");
+      window.history.replaceState({}, "", "/history");
+      return;
+    }
+
+    const verifyPayment = async () => {
+      setVerifyingPayment(true);
       try {
-        const response = await axiosInstance.get(API.BOOKINGS.USER_HISTORY);
-        setBookings(response.data.data || []);
+        await axiosInstance.post(API.BOOKINGS.KHALTI_VERIFY(bookingId), { pidx });
+        await fetchBookings();
+        setPaymentNotice("Payment completed successfully.");
       } catch (err: unknown) {
-        let errorMessage = "Failed to load bookings";
-        if (typeof err === 'object' && err !== null && 'response' in err) {
+        let errorMessage = "Failed to verify payment";
+        if (typeof err === "object" && err !== null && "response" in err) {
           const axiosErr = err as { response?: { data?: { message?: string } } };
           if (axiosErr.response?.data?.message) {
             errorMessage = axiosErr.response.data.message;
@@ -47,12 +95,39 @@ export default function HistoryPage() {
         }
         setError(errorMessage);
       } finally {
-        setLoading(false);
+        setVerifyingPayment(false);
+        window.history.replaceState({}, "", "/history");
       }
     };
 
-    fetchBookings();
-  }, []);
+    verifyPayment();
+  }, [fetchBookings, searchParams]);
+
+  const handlePay = async (bookingId: string) => {
+    setPayingBookingId(bookingId);
+    try {
+      const response = await axiosInstance.post(API.BOOKINGS.KHALTI_INITIATE(bookingId));
+      const paymentUrl = response?.data?.data?.paymentUrl;
+
+      if (!paymentUrl) {
+        throw new Error("Payment URL was not returned by server");
+      }
+
+      window.location.href = paymentUrl;
+    } catch (err: unknown) {
+      let errorMessage = "Failed to initiate Khalti payment";
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          errorMessage = axiosErr.response.data.message;
+        }
+      } else if (err instanceof Error && err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+      setPayingBookingId(null);
+    }
+  };
 
   const handleCancelBooking = async (bookingId: string) => {
     setCancelingBookingId(bookingId);
@@ -89,6 +164,18 @@ export default function HistoryPage() {
         <h1 className="text-3xl font-bold">Booking History</h1>
         <p className="mt-2 text-white/60">View your booked tickets and details.</p>
 
+        {verifyingPayment && (
+          <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-300">
+            Verifying your Khalti payment...
+          </div>
+        )}
+
+        {paymentNotice && (
+          <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-300">
+            {paymentNotice}
+          </div>
+        )}
+
         {error && (
           <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-400">
             {error}
@@ -124,6 +211,15 @@ export default function HistoryPage() {
                       <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-100">
                         {booking.status.toUpperCase()}
                       </span>
+                      {booking.paymentStatus === "paid" ? (
+                        <span className="inline-flex items-center rounded-full bg-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-100">
+                          PAID
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-100">
+                          UNPAID
+                        </span>
+                      )}
                     </div>
 
                     <div className="mt-3 space-y-2 text-sm text-white/70">
@@ -183,6 +279,15 @@ export default function HistoryPage() {
                       >
                         Cancel Booking
                       </button>
+                      {booking.paymentStatus !== "paid" && (
+                        <button
+                          onClick={() => handlePay(booking._id)}
+                          className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={payingBookingId === booking._id || verifyingPayment}
+                        >
+                          {payingBookingId === booking._id ? "Redirecting..." : "Pay"}
+                        </button>
+                      )}
                     </>
                   ) : (
                     <Link

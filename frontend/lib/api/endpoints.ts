@@ -20,6 +20,8 @@ export const API = {
         CREATE: "/api/bookings",
         USER_HISTORY: "/api/bookings/user/history",
         CANCEL: (bookingId: string | number) => `/api/bookings/${bookingId}`,
+        KHALTI_INITIATE: (bookingId: string | number) => `/api/bookings/${bookingId}/payment/khalti/initiate`,
+        KHALTI_VERIFY: (bookingId: string | number) => `/api/bookings/${bookingId}/payment/khalti/verify`,
     },
     ADMIN: {
         MOVIES: {

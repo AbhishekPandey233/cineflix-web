@@ -13,5 +13,7 @@ router.get("/showtimes/:showtimeId/seats", controller.getSeatAvailability);
 router.post("/bookings", requireAuth, controller.createBooking);
 router.get("/bookings/user/history", requireAuth, controller.getUserBookings);
 router.delete("/bookings/:bookingId", requireAuth, controller.cancelBooking);
+router.post("/bookings/:bookingId/payment/khalti/initiate", requireAuth, controller.initiateKhaltiPayment);
+router.post("/bookings/:bookingId/payment/khalti/verify", requireAuth, controller.verifyKhaltiPayment);
 
 export default router;
