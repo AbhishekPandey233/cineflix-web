@@ -58,15 +58,17 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
-    if (page > totalPages) setPage(totalPages);
-  }, [users.length, page, pageSize]);
+  const visibleUsers = users.filter((u) => (u.role || "user").toLowerCase() !== "admin");
 
-  const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(visibleUsers.length / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [visibleUsers.length, page, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleUsers.length / pageSize));
   const startIndex = (page - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, users.length);
-  const pageUsers = users.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + pageSize, visibleUsers.length);
+  const pageUsers = visibleUsers.slice(startIndex, endIndex);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -75,7 +77,7 @@ export default function AdminUsersPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">System Users</h1>
           <p className="text-neutral-400 text-sm mt-1">
-            Managing <span className="text-white font-semibold">{users.length}</span> active accounts
+            Managing <span className="text-white font-semibold">{visibleUsers.length}</span> active accounts
           </p>
         </div>
 
@@ -110,7 +112,7 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {users.length === 0 ? (
+              {visibleUsers.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="px-6 py-12 text-center text-neutral-500 italic">No users found.</td>
                 </tr>
@@ -166,11 +168,11 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {!loading && !error && users.length > 0 && (
+      {!loading && !error && visibleUsers.length > 0 && (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mt-6 text-sm text-neutral-400">
           <div>
             Showing <span className="text-white">{startIndex + 1}</span> to <span className="text-white">{endIndex}</span> of{" "}
-            <span className="text-white">{users.length}</span> users
+            <span className="text-white">{visibleUsers.length}</span> users
           </div>
           <div className="flex items-center gap-2">
             <button
