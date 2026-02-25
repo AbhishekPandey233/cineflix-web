@@ -95,10 +95,6 @@ export default function HomePage() {
           >
             <span className="relative z-10">BOOK TICKETS NOW</span>
           </Link>
-
-          <button className="rounded-md border border-neutral-700 bg-black/40 backdrop-blur-md px-8 py-4 text-sm font-bold transition-all hover:bg-neutral-900 hover:border-red-600">
-            WATCH TRAILER
-          </button>
         </div>
       </div>
 

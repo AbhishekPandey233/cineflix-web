@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import QRCode from "qrcode";
 import axiosInstance from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
 
@@ -35,6 +36,7 @@ export default function HistoryPage() {
   const [selectedCancelBookingId, setSelectedCancelBookingId] = useState<string | null>(null);
   const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
   const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
+  const [downloadingTicketId, setDownloadingTicketId] = useState<string | null>(null);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [paymentNotice, setPaymentNotice] = useState("");
 
@@ -147,6 +149,130 @@ export default function HistoryPage() {
       setSelectedCancelBookingId(null);
     } finally {
       setCancelingBookingId(null);
+    }
+  };
+
+  const handleDownloadTicket = async (booking: Booking) => {
+    setDownloadingTicketId(booking._id);
+    try {
+      const ticketData = {
+        ticketId: booking._id,
+        movie: booking.showtimeId.movieId.title,
+        hall: booking.showtimeId.hallName,
+        showtime: booking.showtimeId.startTime,
+        seats: booking.seats,
+        totalPrice: booking.totalPrice,
+        status: booking.status,
+        bookedOn: booking.createdAt,
+      };
+
+      const qrCanvas = document.createElement("canvas");
+      await QRCode.toCanvas(qrCanvas, JSON.stringify(ticketData), {
+        width: 220,
+        margin: 1,
+        color: {
+          dark: "#FFFFFF",
+          light: "#00000000",
+        },
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 700;
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        throw new Error("Could not initialize ticket canvas");
+      }
+
+      context.fillStyle = "#020617";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, "rgba(239, 68, 68, 0.20)");
+      gradient.addColorStop(0.5, "rgba(15, 23, 42, 0.05)");
+      gradient.addColorStop(1, "rgba(15, 23, 42, 0.5)");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      context.strokeStyle = "rgba(255, 255, 255, 0.16)";
+      context.lineWidth = 2;
+      context.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+
+      context.fillStyle = "#ef4444";
+      context.font = "bold 56px Inter, Arial, sans-serif";
+      context.fillText("CineFlix", 80, 130);
+
+      context.fillStyle = "#FFFFFF";
+      context.font = "bold 42px Inter, Arial, sans-serif";
+      context.fillText("E-Ticket", 80, 185);
+
+      context.fillStyle = "rgba(255,255,255,0.75)";
+      context.font = "24px Inter, Arial, sans-serif";
+      context.fillText("Movie", 80, 260);
+      context.fillStyle = "#FFFFFF";
+      context.font = "bold 34px Inter, Arial, sans-serif";
+      context.fillText(booking.showtimeId.movieId.title, 80, 304);
+
+      context.fillStyle = "rgba(255,255,255,0.75)";
+      context.font = "24px Inter, Arial, sans-serif";
+      context.fillText("Showtime", 80, 370);
+      context.fillStyle = "#FFFFFF";
+      context.font = "bold 28px Inter, Arial, sans-serif";
+      context.fillText(new Date(booking.showtimeId.startTime).toLocaleString(), 80, 410);
+
+      context.fillStyle = "rgba(255,255,255,0.75)";
+      context.font = "24px Inter, Arial, sans-serif";
+      context.fillText("Hall", 80, 470);
+      context.fillStyle = "#FFFFFF";
+      context.font = "bold 28px Inter, Arial, sans-serif";
+      context.fillText(booking.showtimeId.hallName, 80, 510);
+
+      context.fillStyle = "rgba(255,255,255,0.75)";
+      context.font = "24px Inter, Arial, sans-serif";
+      context.fillText("Seats", 420, 470);
+      context.fillStyle = "#FFFFFF";
+      context.font = "bold 28px Inter, Arial, sans-serif";
+      context.fillText(booking.seats.join(", "), 420, 510);
+
+      context.fillStyle = "rgba(255,255,255,0.75)";
+      context.font = "24px Inter, Arial, sans-serif";
+      context.fillText("Total", 80, 570);
+      context.fillStyle = "#22c55e";
+      context.font = "bold 32px Inter, Arial, sans-serif";
+      context.fillText(`₹${booking.totalPrice}`, 80, 612);
+
+      context.fillStyle = "rgba(255,255,255,0.75)";
+      context.font = "20px Inter, Arial, sans-serif";
+      context.fillText(`Booking ID: ${booking._id.slice(-8).toUpperCase()}`, 420, 612);
+
+      context.strokeStyle = "rgba(255,255,255,0.22)";
+      context.setLineDash([8, 8]);
+      context.beginPath();
+      context.moveTo(820, 90);
+      context.lineTo(820, 610);
+      context.stroke();
+      context.setLineDash([]);
+
+      context.drawImage(qrCanvas, 900, 230, 220, 220);
+      context.fillStyle = "rgba(255,255,255,0.75)";
+      context.font = "18px Inter, Arial, sans-serif";
+      context.fillText("Scan for ticket verification", 875, 490);
+
+      context.fillStyle = "rgba(255,255,255,0.55)";
+      context.font = "16px Inter, Arial, sans-serif";
+      context.fillText(`Booked on ${new Date(booking.createdAt).toLocaleString()}`, 80, 650);
+
+      const downloadLink = document.createElement("a");
+      downloadLink.href = canvas.toDataURL("image/png");
+      downloadLink.download = `cineflix-ticket-${booking._id.slice(-8)}.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    } catch {
+      setError("Failed to download ticket. Please try again.");
+    } finally {
+      setDownloadingTicketId(null);
     }
   };
 
@@ -270,8 +396,12 @@ export default function HistoryPage() {
                       >
                         Book Again
                       </Link>
-                      <button className="inline-flex items-center justify-center rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20">
-                        Download Ticket
+                      <button
+                        onClick={() => handleDownloadTicket(booking)}
+                        disabled={downloadingTicketId === booking._id}
+                        className="inline-flex items-center justify-center rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {downloadingTicketId === booking._id ? "Preparing..." : "Download Ticket"}
                       </button>
                       <button
                         onClick={() => setSelectedCancelBookingId(booking._id)}
