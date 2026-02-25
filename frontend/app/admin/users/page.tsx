@@ -90,7 +90,7 @@ export default function AdminUsersPage() {
           </button>
           <Link
             href="/admin/users/create"
-            className="px-4 py-2 text-sm font-bold rounded-lg bg-white text-black hover:bg-neutral-200 transition active:scale-95 shadow-lg shadow-white/5"
+            className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 transition active:scale-95"
           >
             + New User
           </Link>
@@ -147,7 +147,7 @@ export default function AdminUsersPage() {
                         </Link>
                         <Link 
                           href={`/admin/${u._id}/edit`} 
-                          className="px-3 py-1.5 text-xs font-bold rounded-md bg-white text-black hover:bg-neutral-200 transition"
+                          className="px-3 py-1.5 text-xs font-bold rounded-md bg-red-600 text-white hover:bg-red-700 transition"
                         >
                           Edit
                         </Link>
@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
                   <button
                     key={num}
                     onClick={() => setPage(num)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition ${isActive ? "bg-white text-black border-white" : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"}`}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition ${isActive ? "bg-red-600 text-white border-red-500" : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"}`}
                   >
                     {num}
                   </button>
