@@ -210,7 +210,7 @@ export default function AdminCreateMoviePage() {
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 text-sm font-bold rounded-lg bg-white text-black hover:bg-neutral-200 transition disabled:opacity-70"
+            className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-70"
           >
             {saving ? "Saving..." : "Create Movie"}
           </button>
