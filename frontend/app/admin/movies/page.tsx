@@ -107,7 +107,7 @@ export default function AdminMoviesPage() {
                   </Link>
                   <Link
                     href={`/admin/movies/${movie._id}/edit`}
-                    className="px-3 py-1.5 text-xs font-bold rounded-md bg-white text-black hover:bg-neutral-200 transition"
+                    className="px-3 py-1.5 text-xs font-bold rounded-md bg-red-600 text-white hover:bg-red-700 transition"
                   >
                     Edit
                   </Link>
@@ -146,7 +146,7 @@ export default function AdminMoviesPage() {
           </button>
           <Link
             href="/admin/movies/create"
-            className="px-4 py-2 text-sm font-bold rounded-lg bg-white text-black hover:bg-neutral-200 transition active:scale-95 shadow-lg shadow-white/5"
+            className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 transition active:scale-95"
           >
             + New Movie
           </Link>
