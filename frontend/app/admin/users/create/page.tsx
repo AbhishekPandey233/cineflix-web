@@ -57,82 +57,84 @@ export default function AdminCreateUserPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>Create User (Admin)</h1>
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Create User</h1>
+        <p className="mt-1 text-sm text-neutral-400">Add a new account from admin panel</p>
+      </div>
 
-      <form onSubmit={handleSubmit} style={{ marginTop: 16, maxWidth: 420 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label className="flex flex-col gap-2 text-sm">
             Name
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="john"
-              style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40"
               required
             />
           </label>
 
-          <label>
+          <label className="flex flex-col gap-2 text-sm">
             Email
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="john@test.com"
-              style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40"
               required
             />
           </label>
 
-          <label>
+          <label className="flex flex-col gap-2 text-sm">
             Password
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type="password"
               placeholder="password123"
-              style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40"
               required
             />
           </label>
 
-          <label>
+          <label className="flex flex-col gap-2 text-sm">
             Role
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as "user" | "admin")}
-              style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white"
             >
               <option value="user">user</option>
               <option value="admin">admin</option>
             </select>
           </label>
 
-          <label>
+          <label className="flex flex-col gap-2 text-sm md:col-span-2">
             Image (optional)
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setImage(e.target.files?.[0] ?? null)}
-              style={{ width: "100%", padding: 8 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2"
             />
           </label>
+        </div>
 
+        <div className="flex items-center gap-3">
           <button
             type="submit"
             disabled={loading}
-            style={{
-              padding: 10,
-              borderRadius: 8,
-              border: "1px solid #ccc",
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? "Creating..." : "Create User"}
           </button>
-
-          {message ? <p>{message}</p> : null}
         </div>
+
+        {message ? (
+          <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/80">{message}</div>
+        ) : null}
       </form>
     </div>
   );
