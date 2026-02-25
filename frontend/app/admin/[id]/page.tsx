@@ -81,7 +81,7 @@ export default function AdminUserByIdPage() {
           {id && (
             <Link
               href={`/admin/${id}/edit`}
-              className="text-sm px-3 py-1 rounded-md bg-foreground text-background hover:opacity-90 transition"
+              className="rounded-md bg-red-600 px-3 py-1 text-sm font-semibold text-white transition hover:bg-red-700"
             >
               Edit
             </Link>
@@ -107,7 +107,7 @@ export default function AdminUserByIdPage() {
 
       {!loading && !error ? (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 bg-white/3 rounded-lg p-5">
+          <div className="md:col-span-2 rounded-lg border border-white/10 bg-black/30 p-5">
             <div className="mb-3 text-sm text-neutral-400">Profile</div>
 
             <div className="grid grid-cols-1 gap-3">
@@ -133,7 +133,7 @@ export default function AdminUserByIdPage() {
             </div>
           </div>
 
-          <aside className="bg-white/3 rounded-lg p-5">
+          <aside className="rounded-lg border border-white/10 bg-black/30 p-5">
             <div className="text-sm text-neutral-400 mb-4">Actions</div>
 
             <div className="flex flex-col gap-2">
@@ -146,7 +146,7 @@ export default function AdminUserByIdPage() {
 
               <Link
                 href={`/admin/${id}/edit`}
-                className="text-sm px-3 py-2 rounded-md bg-foreground text-background hover:opacity-90 transition text-left"
+                className="rounded-md bg-red-600 px-3 py-2 text-left text-sm font-semibold text-white transition hover:bg-red-700"
               >
                 Edit user
               </Link>

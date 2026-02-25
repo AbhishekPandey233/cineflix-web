@@ -232,25 +232,25 @@ export default function Header() {
   const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-md">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/85 backdrop-blur-xl">
       <div className="relative mx-auto flex h-14 max-w-6xl items-center px-4">
         {/* Logo */}
-        <Link href="/" className="mr-auto pl-2 text-lg font-semibold text-red-500">
-          CineFlix
+        <Link href="/" className="mr-auto pl-2 text-lg font-extrabold tracking-wide text-white">
+          Cine<span className="text-red-500">Flix</span>
         </Link>
 
         {/* Center Nav */}
-        <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6 rounded-full bg-white/10 px-6 py-2 text-sm text-white backdrop-blur-md">
-          <Link href="/home" className="hover:text-red-500 transition">
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 rounded-full border border-white/10 bg-neutral-900/80 px-6 py-2 text-sm text-white/85 shadow-[0_6px_20px_rgba(0,0,0,0.35)] backdrop-blur-md md:flex">
+          <Link href="/home" className="hover:text-red-500 transition-colors">
             Home
           </Link>
-          <Link href="/about" className="hover:text-red-500 transition">
+          <Link href="/about" className="hover:text-red-500 transition-colors">
             About
           </Link>
-          <Link href="/movies" className="hover:text-red-500 transition">
+          <Link href="/movies" className="hover:text-red-500 transition-colors">
             Movies
           </Link>
-          <Link href="/history" className="hover:text-red-500 transition">
+          <Link href="/history" className="hover:text-red-500 transition-colors">
             History
           </Link>
         </nav>
@@ -259,21 +259,21 @@ export default function Header() {
         <div className="ml-auto flex items-center gap-3 pr-2">
           <Link
             href="/login"
-            className="h-9 inline-flex items-center justify-center rounded-md bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur-md hover:bg-white/20"
+            className="h-9 inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white/90 backdrop-blur-md transition-colors hover:bg-white/10"
           >
             Log in
           </Link>
 
           <Link
             href="/register"
-            className="h-9 inline-flex items-center justify-center rounded-md bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700"
+            className="h-9 inline-flex items-center justify-center rounded-md bg-red-600 px-4 text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.25)] transition-colors hover:bg-red-700"
           >
             Sign up
           </Link>
 
           <button
             onClick={() => setProfileOpen(true)}
-            className="h-9 inline-flex items-center justify-center rounded-md bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur-md hover:bg-white/20"
+            className="h-9 inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white/90 backdrop-blur-md transition-colors hover:bg-white/10"
             aria-label="Open profile panel"
           >
             Profile

@@ -238,7 +238,7 @@ export default function AdminMovieDetailPage() {
           </Link>
           <Link
             href={`/admin/movies/${movie._id}/edit`}
-            className="px-3 py-2 text-sm font-bold rounded-md bg-white text-black hover:bg-neutral-200 transition"
+            className="px-3 py-2 text-sm font-bold rounded-md bg-red-600 text-white hover:bg-red-700 transition"
           >
             Edit movie
           </Link>
@@ -372,7 +372,7 @@ export default function AdminMovieDetailPage() {
             <button
               type="submit"
               disabled={savingShowtime}
-              className="w-full px-4 py-2 text-sm font-bold rounded-lg bg-white text-black hover:bg-neutral-200 transition disabled:opacity-70"
+              className="w-full px-4 py-2 text-sm font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-70"
             >
               {savingShowtime ? "Saving..." : showtimeHeading}
             </button>

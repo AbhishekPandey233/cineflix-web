@@ -123,31 +123,31 @@ export default function AdminUserEditPage() {
 
   if (!id) {
     return (
-      <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
-        <p style={{ marginTop: 12 }}>Loading route params...</p>
+      <div className="p-6">
+        <h1 className="text-3xl font-bold tracking-tight">Edit User</h1>
+        <p className="mt-2 text-sm text-neutral-400">Loading route params...</p>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
-        <p style={{ marginTop: 12 }}>Loading...</p>
+      <div className="p-6">
+        <h1 className="text-3xl font-bold tracking-tight">Edit User</h1>
+        <p className="mt-2 text-sm text-neutral-400">Loading...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
-        <p style={{ marginTop: 12 }}>ID: {id}</p>
-        <p style={{ marginTop: 12 }}>{error}</p>
+      <div className="p-6">
+        <h1 className="text-3xl font-bold tracking-tight">Edit User</h1>
+        <p className="mt-2 text-sm text-neutral-400">ID: {id}</p>
+        <p className="mt-3 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{error}</p>
         <button
           onClick={() => fetchUser(id)}
-          style={{ marginTop: 12, padding: "8px 12px", border: "1px solid #ccc", borderRadius: 8 }}
+          className="mt-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm transition hover:bg-white/10"
         >
           Retry
         </button>
@@ -157,78 +157,80 @@ export default function AdminUserEditPage() {
 
   if (!user) {
     return (
-      <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
-        <p style={{ marginTop: 12 }}>User not found</p>
+      <div className="p-6">
+        <h1 className="text-3xl font-bold tracking-tight">Edit User</h1>
+        <p className="mt-2 text-sm text-neutral-400">User not found</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>EDIT USER</h1>
-      <p style={{ marginTop: 12 }}>ID: {id}</p>
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Edit User</h1>
+        <p className="mt-1 text-sm text-neutral-400">ID: {id}</p>
+      </div>
 
-      <form onSubmit={handleSubmit} style={{ marginTop: 16, maxWidth: 420 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label className="flex flex-col gap-2 text-sm">
             Name
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white"
               required
             />
           </label>
 
-          <label>
+          <label className="flex flex-col gap-2 text-sm">
             Email
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white"
               required
             />
           </label>
 
-          <label>
+          <label className="flex flex-col gap-2 text-sm">
             Role
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as "user" | "admin")}
-              style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white"
             >
               <option value="user">user</option>
               <option value="admin">admin</option>
             </select>
           </label>
 
-          <label>
+          <label className="flex flex-col gap-2 text-sm">
             New Password (optional)
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type="password"
               placeholder="leave blank to keep current"
-              style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40"
             />
           </label>
 
-          <label>
+          <label className="flex flex-col gap-2 text-sm md:col-span-2">
             Replace Image (optional)
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setImage(e.target.files?.[0] ?? null)}
-              style={{ width: "100%", padding: 8 }}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-2"
             />
           </label>
 
-          <div style={{ display: "flex", gap: 10 }}>
+          <div className="flex gap-3 md:col-span-2">
             <button
               type="button"
               onClick={() => router.push(`/admin/${id}`)}
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc", cursor: "pointer" }}
+              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm transition hover:bg-white/10"
             >
               Cancel
             </button>
@@ -236,19 +238,15 @@ export default function AdminUserEditPage() {
             <button
               type="submit"
               disabled={saving || !hasChanges}
-              style={{
-                padding: 10,
-                borderRadius: 8,
-                border: "1px solid #ccc",
-                cursor: saving || !hasChanges ? "not-allowed" : "pointer",
-                opacity: saving || !hasChanges ? 0.7 : 1,
-              }}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
 
-          {error ? <p>{error}</p> : null}
+          {error ? (
+            <div className="md:col-span-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{error}</div>
+          ) : null}
         </div>
       </form>
     </div>

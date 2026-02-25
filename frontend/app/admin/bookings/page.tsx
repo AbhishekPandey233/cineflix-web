@@ -132,7 +132,7 @@ export default function AdminBookingsPage() {
           onClick={() => setFilter("all")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
             filter === "all"
-              ? "bg-white text-black"
+              ? "bg-red-600 text-white"
               : "border border-white/10 bg-white/5 hover:bg-white/10"
           }`}
         >
@@ -258,15 +258,15 @@ export default function AdminBookingsPage() {
             className="absolute inset-0 bg-black/70"
             onClick={() => setSelectedCancelBookingId(null)}
           />
-          <div className="relative w-full max-w-sm rounded-2xl border border-red-300 bg-white p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-red-900">Cancel Booking?</h3>
-            <p className="mt-3 text-sm text-red-800">
+          <div className="relative w-full max-w-sm rounded-2xl border border-red-500/30 bg-neutral-900 p-6 text-white shadow-2xl">
+            <h3 className="text-lg font-bold text-red-400">Cancel Booking?</h3>
+            <p className="mt-3 text-sm text-white/75">
               The customer will be notified: &quot;Canceled by admin sorry for the
               inconvenience&quot;. Seats will become available for other users.
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
-                className="rounded-lg border border-red-300 bg-red-50 px-5 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                className="rounded-lg border border-white/15 bg-white/5 px-5 py-2 text-xs font-semibold text-white/85 hover:bg-white/10 disabled:opacity-50"
                 type="button"
                 disabled={
                   cancelingBookingId === selectedCancelBookingId
