@@ -8,9 +8,11 @@ import axiosInstance from "@/lib/api/axios";
 function ProfileDrawer({
   open,
   onClose,
+  onLogout,
 }: {
   open: boolean;
   onClose: () => void;
+  onLogout?: () => void;
 }) {
   // Close on ESC
   useEffect(() => {
@@ -78,6 +80,7 @@ function ProfileDrawer({
       const res = await axiosInstance.post("/api/auth/logout");
       if (res.status >= 200 && res.status < 300) {
         setUser(null);
+        onLogout?.();
         onClose();
         router.push("/login");
         return;
@@ -230,6 +233,25 @@ function ProfileDrawer({
 
 export default function Header() {
   const [profileOpen, setProfileOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const checkAuth = async () => {
+      try {
+        await axiosInstance.get("/api/user/profile");
+        if (mounted) setIsAuthenticated(true);
+      } catch {
+        if (mounted) setIsAuthenticated(false);
+      }
+    };
+
+    checkAuth();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/85 backdrop-blur-xl">
@@ -257,32 +279,40 @@ export default function Header() {
 
         {/* Right Buttons */}
         <div className="ml-auto flex items-center gap-3 pr-2">
-          <Link
-            href="/login"
-            className="h-9 inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white/90 backdrop-blur-md transition-colors hover:bg-white/10"
-          >
-            Log in
-          </Link>
+          {isAuthenticated ? (
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="h-9 inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white/90 backdrop-blur-md transition-colors hover:bg-white/10"
+              aria-label="Open profile panel"
+            >
+              Profile
+            </button>
+          ) : isAuthenticated === false ? (
+            <>
+              <Link
+                href="/login"
+                className="h-9 inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white/90 backdrop-blur-md transition-colors hover:bg-white/10"
+              >
+                Log in
+              </Link>
 
-          <Link
-            href="/register"
-            className="h-9 inline-flex items-center justify-center rounded-md bg-red-600 px-4 text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.25)] transition-colors hover:bg-red-700"
-          >
-            Sign up
-          </Link>
-
-          <button
-            onClick={() => setProfileOpen(true)}
-            className="h-9 inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white/90 backdrop-blur-md transition-colors hover:bg-white/10"
-            aria-label="Open profile panel"
-          >
-            Profile
-          </button>
+              <Link
+                href="/register"
+                className="h-9 inline-flex items-center justify-center rounded-md bg-red-600 px-4 text-sm font-semibold text-white shadow-[0_0_20px_rgba(220,38,38,0.25)] transition-colors hover:bg-red-700"
+              >
+                Sign up
+              </Link>
+            </>
+          ) : null}
         </div>
       </div>
 
       {/* Profile Drawer */}
-      <ProfileDrawer open={profileOpen} onClose={() => setProfileOpen(false)} />
+      <ProfileDrawer
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        onLogout={() => setIsAuthenticated(false)}
+      />
     </header>
   );
 }
