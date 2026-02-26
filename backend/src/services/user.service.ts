@@ -72,28 +72,64 @@ export class UserService {
   }
 
   async updateProfile(requester: any, id: string, updateData: any) {
-  // user can only update self unless admin
-  const isAdmin = requester?.role === "admin";
-  const isSelf = requester?.id === id;
+    // user can only update self unless admin
+    const isAdmin = requester?.role === "admin";
+    const isSelf = requester?.id === id;
 
-  if (!isAdmin && !isSelf) throw new HttpError(403, "Forbidden");
+    if (!isAdmin && !isSelf) throw new HttpError(403, "Forbidden");
 
-  // Don’t allow role change from this endpoint unless admin
-  if (!isAdmin) delete updateData.role;
+    const existingUser = await userRepository.getUserById(id);
+    if (!existingUser) throw new HttpError(404, "User not found");
 
-  // If password present, hash it
-  if (updateData.password) {
-    updateData.password = await bcryptjs.hash(updateData.password, BCRYPT_SALT_ROUNDS);
+    // Don’t allow role change from this endpoint unless admin
+    if (!isAdmin) delete updateData.role;
+
+    if (typeof updateData.name === "string") {
+      updateData.name = updateData.name.trim();
+      if (!updateData.name) delete updateData.name;
+    }
+
+    if (typeof updateData.email === "string") {
+      updateData.email = updateData.email.trim();
+      if (!updateData.email) delete updateData.email;
+    }
+
+    if (updateData.name && updateData.name !== existingUser.name) {
+      const usernameCheck = await userRepository.getUserByName(updateData.name);
+      if (usernameCheck && usernameCheck._id.toString() !== id) {
+        throw new HttpError(409, "Username already in use");
+      }
+    }
+
+    if (updateData.email && updateData.email !== existingUser.email) {
+      const emailCheck = await userRepository.getUserByEmail(updateData.email);
+      if (emailCheck && emailCheck._id.toString() !== id) {
+        throw new HttpError(409, "Email already in use");
+      }
+    }
+
+    // If password present, hash it
+    if (updateData.password) {
+      updateData.password = await bcryptjs.hash(updateData.password, BCRYPT_SALT_ROUNDS);
+    }
+
+    try {
+      const updated = await userRepository.updateUser(id, updateData);
+      if (!updated) throw new HttpError(404, "User not found");
+
+      const obj = (updated as any).toObject ? (updated as any).toObject() : updated;
+      delete obj.password;
+
+      return obj;
+    } catch (error: any) {
+      if (error?.code === 11000) {
+        if (error?.keyPattern?.name) throw new HttpError(409, "Username already in use");
+        if (error?.keyPattern?.email) throw new HttpError(409, "Email already in use");
+        throw new HttpError(409, "Duplicate value already in use");
+      }
+      throw error;
+    }
   }
-
-  const updated = await userRepository.updateUser(id, updateData);
-  if (!updated) throw new HttpError(404, "User not found");
-
-  const obj = (updated as any).toObject ? (updated as any).toObject() : updated;
-  delete obj.password;
-
-  return obj;
-}
 
   async requestPasswordReset(email: string) {
     const user = await userRepository.getUserByEmail(email);

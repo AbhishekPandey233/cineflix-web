@@ -71,6 +71,13 @@ export default function AboutPage() {
           by eliminating long queues and making every booking experience smooth
           and stress-free.
         </p>
+
+        <div className="mt-10 mx-auto max-w-3xl rounded-xl border border-white/15 bg-black/30 p-6">
+          <h3 className="text-2xl font-bold text-white">Help &amp; Support</h3>
+          <p className="mt-3 text-white/75 text-lg">
+            Contacts: 9746285620, support@cineflix.com
+          </p>
+        </div>
       </section>
 
     </main>

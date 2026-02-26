@@ -34,6 +34,8 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
   const [selectedCancelBookingId, setSelectedCancelBookingId] = useState<
     string | null
   >(null);
@@ -97,6 +99,16 @@ export default function AdminBookingsPage() {
     if (filter === "cancelled") return b.status === "cancelled";
     return true;
   });
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [filteredBookings.length, page, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredBookings.length);
+  const pageBookings = filteredBookings.slice(startIndex, endIndex);
 
   if (loading) {
     return (
@@ -193,7 +205,7 @@ export default function AdminBookingsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {filteredBookings.map((booking) => (
+              {pageBookings.map((booking) => (
                 <tr
                   key={booking._id}
                   className="hover:bg-white/[0.02] transition-colors"
@@ -249,6 +261,46 @@ export default function AdminBookingsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!loading && !error && filteredBookings.length > 0 && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mt-6 text-sm text-neutral-400">
+          <div>
+            Showing <span className="text-white">{startIndex + 1}</span> to <span className="text-white">{endIndex}</span> of{" "}
+            <span className="text-white">{filteredBookings.length}</span> bookings
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 rounded-md border border-white/10 bg-white/5 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Prev
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }).map((_, idx) => {
+                const num = idx + 1;
+                const isActive = num === page;
+                return (
+                  <button
+                    key={num}
+                    onClick={() => setPage(num)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition ${isActive ? "bg-red-600 text-white border-red-500" : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"}`}
+                  >
+                    {num}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 rounded-md border border-white/10 bg-white/5 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 

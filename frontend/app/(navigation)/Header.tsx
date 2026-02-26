@@ -217,7 +217,7 @@ function ProfileDrawer({
             </Link>
 
             <Link
-              href="/help"
+              href="/about"
               onClick={onClose}
               className="block rounded-lg bg-white/10 px-4 py-3 text-white hover:bg-white/20 transition"
             >

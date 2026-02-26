@@ -3,8 +3,12 @@ export const API = {
     AUTH: {
         REGISTER: "/api/auth/register",
         LOGIN: "/api/auth/login",
+        LOGOUT: "/api/auth/logout",
         FORGOT_PASSWORD: "/api/auth/forgot-password",
         RESET_PASSWORD: "/api/auth/reset-password",
+    },
+    USER: {
+        PROFILE: "/api/user/profile",
     },
     MOVIES: {
         ALL: "/api/movies",
@@ -24,6 +28,9 @@ export const API = {
         KHALTI_VERIFY: (bookingId: string | number) => `/api/bookings/${bookingId}/payment/khalti/verify`,
     },
     ADMIN: {
+        USERS: {
+            DELETE: (id: string | number) => `/api/admin/users/${id}`,
+        },
         MOVIES: {
             ALL: "/api/admin/movies",
             DETAILS: (id: string | number) => `/api/admin/movies/${id}`,

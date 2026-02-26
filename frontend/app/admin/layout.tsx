@@ -7,7 +7,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Background image (GLOBAL) */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/71meY6dAvjL.jpg')" }}
+        style={{ backgroundImage: "url('/adminbackground.jpg')" }}
       />
 
       {/* Global dark overlay */}
@@ -67,6 +67,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-red-400"
           >
             Bookings
+          </Link>
+
+          <Link
+            href="/admin/profile"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-red-400"
+          >
+            Profile
           </Link>
         </nav>
       </aside>

@@ -16,15 +16,14 @@ type Movie = {
   score: number;
 };
 
+
 const resolveImageUrl = (path: string): string => {
   if (!path) return "";
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  // If it's a backend upload path, prefix with API base URL
   if (path.includes("/uploads/")) {
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
     return `${apiBase}${path}`;
   }
-  // Otherwise it's a static public file, return as-is
   return path;
 };
 
