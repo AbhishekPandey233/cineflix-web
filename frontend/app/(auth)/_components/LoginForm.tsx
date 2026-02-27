@@ -4,12 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { ForgotPasswordData, LoginData, ResetPasswordData, forgotPasswordSchema, loginSchema, resetPasswordSchema } from "../schema";
 import { handleForgotPassword, handleLogin, handleResetPassword } from "@/lib/actions/auth-actions";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [mode, setMode] = useState<"login" | "forgot" | "reset">("login");
   const [status, setStatus] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [prefillToken, setPrefillToken] = useState("");
@@ -63,9 +61,9 @@ export default function LoginForm() {
         const role = res.data?.role;
 
         if (role === "admin") {
-          router.replace("/admin/users");
+          window.location.assign("/admin/users");
         } else {
-          router.replace("/home"); 
+          window.location.assign("/home");
         }
       } else {
         alert(res.message);
