@@ -43,6 +43,7 @@ export const API = {
         BOOKINGS: {
             ALL: "/api/admin/bookings",
             CANCEL: (bookingId: string | number) => `/api/admin/bookings/${bookingId}`,
+            REMOVE: (bookingId: string | number) => `/api/admin/bookings/${bookingId}/remove`,
         },
     },
 }

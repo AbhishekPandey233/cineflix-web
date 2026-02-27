@@ -39,6 +39,18 @@ const toDateTimeLocal = (value?: string) => {
   return local.toISOString().slice(0, 16);
 };
 
+const resolveImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const baseFromEnv = process.env.NEXT_PUBLIC_API_BASE_URL ?? undefined;
+  const baseFromAxios = axiosInstance.defaults.baseURL ?? undefined;
+  const fallback = typeof window !== "undefined" ? `${window.location.protocol}//${window.location.hostname}:5000` : "";
+  const base = baseFromEnv || baseFromAxios || fallback || "";
+  if (!base) return path;
+  const cleanedBase = base.replace(/\/$/, "");
+  return `${cleanedBase}${path.startsWith("/") ? path : `/${path}`}`;
+};
+
 export default function AdminMovieDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -302,8 +314,19 @@ export default function AdminMovieDetailPage() {
 
         <aside className="rounded-xl border border-white/10 bg-black/30 p-6 space-y-4">
           <div>
-            <div className="text-xs text-neutral-400">Poster URL</div>
-            <div className="mt-2 text-sm text-neutral-200 break-all">{movie.img}</div>
+            <div className="text-xs text-neutral-400">Poster</div>
+            <div className="mt-2 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+              {movie.img ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={resolveImageUrl(movie.img)}
+                  alt={`${movie.title} poster`}
+                  className="h-64 w-full object-cover"
+                />
+              ) : (
+                <div className="grid h-64 w-full place-items-center text-sm text-neutral-500">No poster available</div>
+              )}
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <Link

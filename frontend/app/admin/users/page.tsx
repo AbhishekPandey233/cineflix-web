@@ -8,8 +8,21 @@ type UserRow = {
   _id: string;
   name?: string;
   email?: string;
+  image?: string;
   role?: "user" | "admin";
   createdAt?: string;
+};
+
+const buildImageUrl = (path?: string) => {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const baseFromEnv = process.env.NEXT_PUBLIC_API_BASE_URL ?? undefined;
+  const baseFromAxios = axiosInstance.defaults.baseURL ?? undefined;
+  const fallback = typeof window !== "undefined" ? `${window.location.protocol}//${window.location.hostname}:5000` : "";
+  const base = baseFromEnv || baseFromAxios || fallback || "";
+  if (!base) return path;
+  const cleanedBase = base.replace(/\/$/, "");
+  return `${cleanedBase}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
 export default function AdminUsersPage() {
@@ -120,12 +133,22 @@ export default function AdminUsersPage() {
                 pageUsers.map((u) => (
                   <tr key={u._id} className="group hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-neutral-100 group-hover:text-white transition">
-                          {u.name || "Unnamed User"}
-                        </span>
-                        <span className="text-xs text-neutral-400">{u.email}</span>
-                        <span className="text-[10px] font-mono text-neutral-600 mt-1 uppercase tracking-tighter">ID: {u._id}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 overflow-hidden rounded-full border border-white/10 bg-white/5 grid place-items-center text-xs font-semibold text-white/70">
+                          {u.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={buildImageUrl(u.image) ?? ""} alt={`${u.name || "User"} avatar`} className="h-full w-full object-cover" />
+                          ) : (
+                            (u.name?.[0] || "U").toUpperCase()
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-neutral-100 group-hover:text-white transition">
+                            {u.name || "Unnamed User"}
+                          </span>
+                          <span className="text-xs text-neutral-400">{u.email}</span>
+                          <span className="text-[10px] font-mono text-neutral-600 mt-1 uppercase tracking-tighter">ID: {u._id}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">

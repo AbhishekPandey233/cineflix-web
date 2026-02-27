@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
 
@@ -14,14 +13,11 @@ type AdminProfile = {
 };
 
 export default function AdminProfilePage() {
-  const router = useRouter();
-
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -107,38 +103,6 @@ export default function AdminProfilePage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!profile?._id) return;
-
-    const confirmed = window.confirm("Delete your admin account? This action cannot be undone.");
-    if (!confirmed) return;
-
-    setDeleting(true);
-    setMessage(null);
-
-    try {
-      await axiosInstance.delete(API.ADMIN.USERS.DELETE(profile._id));
-
-      try {
-        await axiosInstance.post(API.AUTH.LOGOUT);
-      } catch {}
-
-      document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
-      router.replace("/login");
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string } } };
-      const errorMessage =
-        axiosErr?.response?.data?.message ||
-        (err instanceof Error ? err.message : "Failed to delete profile");
-      setMessage({ type: "error", text: errorMessage });
-    } finally {
-      setDeleting(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="max-w-3xl">
@@ -207,14 +171,6 @@ export default function AdminProfilePage() {
                 className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving..." : "Save Changes"}
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-red-500/15 text-red-400 border border-red-500/20 hover:bg-red-500/25 transition disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {deleting ? "Deleting..." : "Delete Account"}
               </button>
             </div>
           </form>

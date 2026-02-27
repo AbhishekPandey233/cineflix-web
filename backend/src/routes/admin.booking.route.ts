@@ -10,5 +10,6 @@ router.use(requireAuth, requireAdmin);
 
 router.get("/bookings", controller.adminGetAllBookings);
 router.delete("/bookings/:bookingId", controller.adminCancelBooking);
+router.delete("/bookings/:bookingId/remove", controller.adminRemoveCancelledBooking);
 
 export default router;

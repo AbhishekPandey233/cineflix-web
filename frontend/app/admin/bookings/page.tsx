@@ -36,12 +36,14 @@ export default function AdminBookingsPage() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 8;
-  const [selectedCancelBookingId, setSelectedCancelBookingId] = useState<
-    string | null
-  >(null);
   const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(
     null
   );
+  const [removingBookingId, setRemovingBookingId] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    action: "cancel" | "remove";
+    bookingId: string;
+  } | null>(null);
   const [filter, setFilter] = useState<"all" | "confirmed" | "cancelled">(
     "all"
   );
@@ -80,7 +82,6 @@ export default function AdminBookingsPage() {
             : b
         )
       );
-      setSelectedCancelBookingId(null);
     } catch (err: unknown) {
       const axiosErr = err as {
         response?: { data?: { message?: string } };
@@ -92,6 +93,39 @@ export default function AdminBookingsPage() {
     } finally {
       setCancelingBookingId(null);
     }
+  };
+
+  const handleRemoveCancelledBooking = async (bookingId: string) => {
+    setRemovingBookingId(bookingId);
+    setError("");
+    try {
+      await axiosInstance.delete(API.ADMIN.BOOKINGS.REMOVE(bookingId));
+      setBookings((prev) => prev.filter((b) => b._id !== bookingId));
+    } catch (err: unknown) {
+      const axiosErr = err as {
+        response?: { data?: { message?: string } };
+      };
+      const errorMessage =
+        axiosErr?.response?.data?.message ||
+        (err instanceof Error ? err.message : "Failed to remove booking");
+      setError(errorMessage);
+    } finally {
+      setRemovingBookingId(null);
+    }
+  };
+
+  const handleDialogConfirm = async () => {
+    if (!confirmDialog) return;
+
+    const { action, bookingId } = confirmDialog;
+    setConfirmDialog(null);
+
+    if (action === "cancel") {
+      await handleCancelBooking(bookingId);
+      return;
+    }
+
+    await handleRemoveCancelledBooking(bookingId);
   };
 
   const filteredBookings = bookings.filter((b) => {
@@ -250,10 +284,19 @@ export default function AdminBookingsPage() {
                   <td className="px-6 py-4 text-right">
                     {booking.status === "confirmed" && (
                       <button
-                        onClick={() => setSelectedCancelBookingId(booking._id)}
+                        onClick={() => setConfirmDialog({ action: "cancel", bookingId: booking._id })}
                         className="px-3 py-1.5 text-xs font-bold rounded-md bg-red-500/15 text-red-400 border border-red-500/20 hover:bg-red-500/25 transition"
                       >
                         Cancel
+                      </button>
+                    )}
+                    {booking.status === "cancelled" && (
+                      <button
+                        onClick={() => setConfirmDialog({ action: "remove", bookingId: booking._id })}
+                        disabled={removingBookingId === booking._id}
+                        className="px-3 py-1.5 text-xs font-bold rounded-md bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {removingBookingId === booking._id ? "Removing..." : "Remove"}
                       </button>
                     )}
                   </td>
@@ -304,43 +347,42 @@ export default function AdminBookingsPage() {
         </div>
       )}
 
-      {selectedCancelBookingId && (
+      {confirmDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
           <div
             className="absolute inset-0 bg-black/70"
-            onClick={() => setSelectedCancelBookingId(null)}
+            onClick={() => setConfirmDialog(null)}
           />
-          <div className="relative w-full max-w-sm rounded-2xl border border-red-500/30 bg-neutral-900 p-6 text-white shadow-2xl">
-            <h3 className="text-lg font-bold text-red-400">Cancel Booking?</h3>
-            <p className="mt-3 text-sm text-white/75">
-              The customer will be notified: &quot;Canceled by admin sorry for the
-              inconvenience&quot;. Seats will become available for other users.
+          <div className="relative w-full max-w-sm rounded-2xl border border-blue-300 bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-blue-900">
+              {confirmDialog.action === "cancel" ? "Cancel Booking?" : "Remove Booking?"}
+            </h3>
+            <p className="mt-3 text-sm text-blue-700">
+              {confirmDialog.action === "cancel"
+                ? "This will mark the ticket as cancelled."
+                : "This will permanently delete this cancelled booking from records."}
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
-                className="rounded-lg border border-white/15 bg-white/5 px-5 py-2 text-xs font-semibold text-white/85 hover:bg-white/10 disabled:opacity-50"
+                className="rounded-lg border border-blue-200 bg-blue-50 px-5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
                 type="button"
-                disabled={
-                  cancelingBookingId === selectedCancelBookingId
-                }
-                onClick={() => setSelectedCancelBookingId(null)}
+                onClick={() => setConfirmDialog(null)}
               >
-                Keep Booking
+                Go Back
               </button>
               <button
-                className="rounded-lg bg-red-600 px-5 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-lg bg-blue-700 px-5 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
                 disabled={
-                  cancelingBookingId === selectedCancelBookingId
+                  (confirmDialog.action === "cancel" && cancelingBookingId === confirmDialog.bookingId) ||
+                  (confirmDialog.action === "remove" && removingBookingId === confirmDialog.bookingId)
                 }
-                onClick={() =>
-                  selectedCancelBookingId &&
-                  handleCancelBooking(selectedCancelBookingId)
-                }
+                onClick={handleDialogConfirm}
               >
-                {cancelingBookingId === selectedCancelBookingId
-                  ? "Cancelling..."
-                  : "Cancel Booking"}
+                {(confirmDialog.action === "cancel" && cancelingBookingId === confirmDialog.bookingId) ||
+                (confirmDialog.action === "remove" && removingBookingId === confirmDialog.bookingId)
+                  ? "Processing..."
+                  : "Confirm"}
               </button>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { API } from "@/lib/api/endpoints";
 type MovieRow = {
   _id: string;
   title: string;
+  img: string;
   genre: string;
   rating: string;
   year: number;
@@ -15,6 +16,16 @@ type MovieRow = {
   duration: string;
   status: "now-showing" | "coming-soon";
   releaseDate?: string;
+};
+
+const resolveImageUrl = (path: string): string => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.includes("/uploads/")) {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+    return `${apiBase}${path}`;
+  }
+  return path;
 };
 
 export default function AdminMoviesPage() {
@@ -76,6 +87,7 @@ export default function AdminMoviesPage() {
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="bg-white/[0.03] border-b border-white/10">
+            <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-neutral-500">Poster</th>
             <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-neutral-500">Title</th>
             <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-neutral-500">Genre</th>
             <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-neutral-500">Score</th>
@@ -86,6 +98,20 @@ export default function AdminMoviesPage() {
         <tbody className="divide-y divide-white/5">
           {items.map((movie) => (
             <tr key={movie._id} className="group hover:bg-white/[0.02] transition-colors">
+              <td className="px-6 py-4">
+                <div className="h-14 w-10 overflow-hidden rounded-md border border-white/10 bg-white/5">
+                  {movie.img ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={resolveImageUrl(movie.img)}
+                      alt={`${movie.title} poster`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center text-[10px] text-neutral-500">N/A</div>
+                  )}
+                </div>
+              </td>
               <td className="px-6 py-4">
                 <div className="flex flex-col">
                   <span className="font-semibold text-neutral-100 group-hover:text-white transition">
