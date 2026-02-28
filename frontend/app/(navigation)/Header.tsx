@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -257,8 +258,11 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/85 backdrop-blur-xl">
       <div className="relative mx-auto flex h-14 max-w-6xl items-center px-4">
         {/* Logo */}
-        <Link href="/" className="mr-auto pl-2 text-lg font-extrabold tracking-wide text-white">
-          Cine<span className="text-red-500">Flix</span>
+        <Link href="/" className="mr-auto flex items-center gap-2 pl-2 text-lg font-extrabold tracking-wide text-white">
+          <Image src="/cineFlix.PNG" alt="CineFlix logo" width={28} height={28} className="h-7 w-7 object-contain" priority />
+          <span>
+            Cine<span className="text-red-500">Flix</span>
+          </span>
         </Link>
 
         {/* Center Nav */}
