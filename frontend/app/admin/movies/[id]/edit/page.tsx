@@ -77,6 +77,9 @@ export default function AdminMovieEditPage() {
   const [savingShowtime, setSavingShowtime] = useState(false);
   const [showtimeError, setShowtimeError] = useState<string>("");
 
+  const darkControlClass =
+    "rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white [color-scheme:dark] focus:border-white/20 focus:outline-none";
+
   const hasChanges = useMemo(() => {
     if (!movie) return false;
     return (
@@ -396,10 +399,10 @@ export default function AdminMovieEditPage() {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as "now-showing" | "coming-soon")}
-              className="rounded-md border border-white/10 bg-white/5 px-3 py-2"
+              className={darkControlClass}
             >
-              <option value="now-showing">Now Showing</option>
-              <option value="coming-soon">Coming Soon</option>
+              <option className="bg-neutral-900 text-white" value="now-showing">Now Showing</option>
+              <option className="bg-neutral-900 text-white" value="coming-soon">Coming Soon</option>
             </select>
           </label>
 
@@ -409,7 +412,7 @@ export default function AdminMovieEditPage() {
               type="date"
               value={releaseDate}
               onChange={(e) => setReleaseDate(e.target.value)}
-              className="rounded-md border border-white/10 bg-white/5 px-3 py-2"
+              className={darkControlClass}
             />
           </label>
         </div>
@@ -468,10 +471,10 @@ export default function AdminMovieEditPage() {
               <select
                 value={hallId}
                 onChange={(e) => setHallId(e.target.value as "A" | "B")}
-                className="rounded-md border border-white/10 bg-white/5 px-3 py-2"
+                className={darkControlClass}
               >
-                <option value="A">Hall A</option>
-                <option value="B">Hall B</option>
+                <option className="bg-neutral-900 text-white" value="A">Hall A</option>
+                <option className="bg-neutral-900 text-white" value="B">Hall B</option>
               </select>
             </label>
 
@@ -481,7 +484,7 @@ export default function AdminMovieEditPage() {
                 type="datetime-local"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="rounded-md border border-white/10 bg-white/5 px-3 py-2"
+                className={darkControlClass}
                 required
               />
             </label>

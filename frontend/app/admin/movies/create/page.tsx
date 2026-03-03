@@ -23,6 +23,9 @@ export default function AdminCreateMoviePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>("");
 
+  const darkControlClass =
+    "rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white [color-scheme:dark] focus:border-white/20 focus:outline-none";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -168,10 +171,10 @@ export default function AdminCreateMoviePage() {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as "now-showing" | "coming-soon")}
-              className="rounded-md border border-white/10 bg-white/5 px-3 py-2"
+              className={darkControlClass}
             >
-              <option value="now-showing">Now Showing</option>
-              <option value="coming-soon">Coming Soon</option>
+              <option className="bg-neutral-900 text-white" value="now-showing">Now Showing</option>
+              <option className="bg-neutral-900 text-white" value="coming-soon">Coming Soon</option>
             </select>
           </label>
 
@@ -181,7 +184,7 @@ export default function AdminCreateMoviePage() {
               type="date"
               value={releaseDate}
               onChange={(e) => setReleaseDate(e.target.value)}
-              className="rounded-md border border-white/10 bg-white/5 px-3 py-2"
+              className={darkControlClass}
             />
           </label>
         </div>

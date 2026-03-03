@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axiosInstance from "@/lib/api/axios";
 
 type UserRow = {
@@ -32,6 +32,7 @@ export default function AdminUsersPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<UserRow | null>(null);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const pageSize = 8;
 
   const fetchUsers = async () => {
@@ -87,17 +88,54 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, []);
 
-  const visibleUsers = users.filter((u) => (u.role || "user").toLowerCase() !== "admin");
+  const visibleUsers = useMemo(() => {
+    const getCreatedAtTime = (user: UserRow) => {
+      if (!user.createdAt) return NaN;
+      const time = new Date(user.createdAt).getTime();
+      return Number.isNaN(time) ? NaN : time;
+    };
+
+    return users
+      .filter((u) => (u.role || "user").toLowerCase() !== "admin")
+      .sort((a, b) => {
+        const aTime = getCreatedAtTime(a);
+        const bTime = getCreatedAtTime(b);
+
+        if (!Number.isNaN(aTime) && !Number.isNaN(bTime) && aTime !== bTime) {
+          return bTime - aTime;
+        }
+        if (!Number.isNaN(aTime) && Number.isNaN(bTime)) return -1;
+        if (Number.isNaN(aTime) && !Number.isNaN(bTime)) return 1;
+
+        return b._id.localeCompare(a._id);
+      });
+  }, [users]);
+
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return visibleUsers;
+
+    return visibleUsers.filter((u) => {
+      const name = (u.name ?? "").toLowerCase();
+      const email = (u.email ?? "").toLowerCase();
+      const id = (u._id ?? "").toLowerCase();
+      return name.includes(query) || email.includes(query) || id.includes(query);
+    });
+  }, [visibleUsers, search]);
 
   useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(visibleUsers.length / pageSize));
-    if (page > totalPages) setPage(totalPages);
-  }, [visibleUsers.length, page, pageSize]);
+    setPage(1);
+  }, [search]);
 
-  const totalPages = Math.max(1, Math.ceil(visibleUsers.length / pageSize));
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [filteredUsers.length, page, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
   const startIndex = (page - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, visibleUsers.length);
-  const pageUsers = visibleUsers.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + pageSize, filteredUsers.length);
+  const pageUsers = filteredUsers.slice(startIndex, endIndex);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -111,6 +149,12 @@ export default function AdminUsersPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search user by name, email, or ID"
+            className="w-72 max-w-full px-4 py-2 text-sm rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/20 focus:outline-none"
+          />
           <button
             onClick={fetchUsers}
             className="px-4 py-2 text-sm font-medium rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition active:scale-95"
@@ -141,7 +185,7 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {visibleUsers.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="px-6 py-12 text-center text-neutral-500 italic">No users found.</td>
                 </tr>
@@ -207,11 +251,11 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {!loading && !error && visibleUsers.length > 0 && (
+      {!loading && !error && filteredUsers.length > 0 && (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mt-6 text-sm text-neutral-400">
           <div>
             Showing <span className="text-white">{startIndex + 1}</span> to <span className="text-white">{endIndex}</span> of{" "}
-            <span className="text-white">{visibleUsers.length}</span> users
+            <span className="text-white">{filteredUsers.length}</span> users
           </div>
           <div className="flex items-center gap-2">
             <button

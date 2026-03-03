@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
 
@@ -13,11 +14,14 @@ type AdminProfile = {
 };
 
 export default function AdminProfilePage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -103,6 +107,26 @@ export default function AdminProfilePage() {
     }
   };
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    setMessage(null);
+
+    try {
+      const res = await axiosInstance.post(API.AUTH.LOGOUT);
+      if (res.status >= 200 && res.status < 300) {
+        setShowLogoutPopup(false);
+        router.push("/login");
+        return;
+      }
+      const data = res.data;
+      setMessage({ type: "error", text: data?.message || "Logout failed" });
+    } catch {
+      setMessage({ type: "error", text: "Network error. Please try again." });
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-3xl">
@@ -172,6 +196,13 @@ export default function AdminProfilePage() {
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>
+              <button
+                type="button"
+                onClick={() => setShowLogoutPopup(true)}
+                className="ml-auto px-4 py-2 text-sm font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+              >
+                Logout
+              </button>
             </div>
           </form>
         </div>
@@ -180,6 +211,34 @@ export default function AdminProfilePage() {
           Could not load admin profile.
         </div>
       )}
+
+      {showLogoutPopup ? (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-lg border border-blue-200 bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-semibold text-blue-700">Logout?</h2>
+            <p className="mt-2 text-sm text-blue-600">Are you sure you want to logout from your admin account?</p>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  if (!loggingOut) setShowLogoutPopup(false);
+                }}
+                disabled={loggingOut}
+                className="rounded-md border border-blue-300 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 transition disabled:opacity-60"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition disabled:opacity-60"
+              >
+                {loggingOut ? "Logging out..." : "Logout"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
