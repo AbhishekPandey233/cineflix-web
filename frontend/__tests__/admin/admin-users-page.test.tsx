@@ -34,7 +34,6 @@ describe("AdminUsersPage", () => {
 
   it("deletes a user after confirm", async () => {
     const user = userEvent.setup();
-    jest.spyOn(window, "confirm").mockReturnValue(true);
 
     getMock.mockResolvedValue({ data: { data: [{ _id: "u1", name: "A", email: "a@test.com", role: "user" }] } });
     deleteMock.mockResolvedValue({});
@@ -42,6 +41,7 @@ describe("AdminUsersPage", () => {
     render(<AdminUsersPage />);
 
     await user.click(await screen.findByRole("button", { name: "Delete" }));
+    await user.click(await screen.findByRole("button", { name: "Confirm" }));
 
     await waitFor(() => {
       expect(deleteMock).toHaveBeenCalled();

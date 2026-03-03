@@ -33,6 +33,7 @@ export default function AdminMoviesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteMovie, setConfirmDeleteMovie] = useState<MovieRow | null>(null);
 
   const fetchMovies = async () => {
     setError("");
@@ -51,8 +52,6 @@ export default function AdminMoviesPage() {
 
   const handleDelete = async (movie: MovieRow) => {
     if (!movie?._id) return;
-    const ok = window.confirm(`Delete ${movie.title}? This cannot be undone.`);
-    if (!ok) return;
 
     setDeletingId(movie._id);
     setError("");
@@ -66,6 +65,23 @@ export default function AdminMoviesPage() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const openDeletePopup = (movie: MovieRow) => {
+    if (!movie?._id || deletingId) return;
+    setConfirmDeleteMovie(movie);
+  };
+
+  const closeDeletePopup = () => {
+    if (deletingId) return;
+    setConfirmDeleteMovie(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmDeleteMovie) return;
+    const movieToDelete = confirmDeleteMovie;
+    setConfirmDeleteMovie(null);
+    await handleDelete(movieToDelete);
   };
 
   useEffect(() => {
@@ -138,7 +154,7 @@ export default function AdminMoviesPage() {
                     Edit
                   </Link>
                   <button
-                    onClick={() => handleDelete(movie)}
+                    onClick={() => openDeletePopup(movie)}
                     disabled={deletingId === movie._id}
                     className="px-3 py-1.5 text-xs font-bold rounded-md bg-red-500/15 text-red-400 border border-red-500/20 hover:bg-red-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -209,6 +225,34 @@ export default function AdminMoviesPage() {
           </section>
         </div>
       )}
+
+      {confirmDeleteMovie ? (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-lg border border-blue-200 bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-semibold text-blue-700">Delete movie?</h2>
+            <p className="mt-2 text-sm text-blue-600">
+              Delete {confirmDeleteMovie.title}? This action cannot be undone.
+            </p>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={closeDeletePopup}
+                disabled={!!deletingId}
+                className="rounded-md border border-blue-300 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 transition disabled:opacity-60"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={!!deletingId}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition disabled:opacity-60"
+              >
+                {deletingId === confirmDeleteMovie._id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
