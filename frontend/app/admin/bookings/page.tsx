@@ -10,18 +10,18 @@ type AdminBooking = {
     _id: string;
     email: string;
     fullName: string;
-  };
+  } | null;
   showtimeId: {
     _id: string;
     movieId: {
       _id: string;
       title: string;
-    };
+    } | null;
     hallId: string;
     hallName: string;
     startTime: string;
     price: number;
-  };
+  } | null;
   seats: string[];
   totalPrice: number;
   status: "confirmed" | "cancelled";
@@ -245,16 +245,26 @@ export default function AdminBookingsPage() {
                   className="hover:bg-white/[0.02] transition-colors"
                 >
                   <td className="px-6 py-4 text-sm font-medium text-white">
-                    {booking.showtimeId.movieId.title}
+                    {booking.showtimeId?.movieId?.title ?? "Unknown movie"}
                   </td>
                   <td className="px-6 py-4 text-sm text-white/80">
-                    <div className="font-medium">{booking.userId.fullName}</div>
-                    <div className="text-xs text-white/60">{booking.userId.email}</div>
+                    {booking.userId?.fullName ? (
+                      <>
+                        <div className="font-medium">{booking.userId.fullName}</div>
+                        <div className="text-xs text-white/60">{booking.userId.email ?? "No email"}</div>
+                      </>
+                    ) : (
+                      <div className="font-medium">{booking.userId?.email ?? "No email"}</div>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-white/80">
-                    <div>{new Date(booking.showtimeId.startTime).toLocaleString()}</div>
+                    <div>
+                      {booking.showtimeId?.startTime
+                        ? new Date(booking.showtimeId.startTime).toLocaleString()
+                        : "Schedule unavailable"}
+                    </div>
                     <div className="text-xs text-white/60">
-                      {booking.showtimeId.hallName}
+                      {booking.showtimeId?.hallName ?? "Hall unavailable"}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-white/80">

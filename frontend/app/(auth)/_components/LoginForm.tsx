@@ -61,7 +61,7 @@ export default function LoginForm() {
         const role = res.data?.role;
 
         if (role === "admin") {
-          window.location.assign("/admin/users");
+          window.location.assign("/admin/dashboard");
         } else {
           window.location.assign("/home");
         }
