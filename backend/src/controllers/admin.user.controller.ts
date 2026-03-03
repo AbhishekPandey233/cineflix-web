@@ -8,7 +8,7 @@ import { AdminCreateUserDTO, AdminUpdateUserDTO } from "../dtos/admin.user.dto";
 const repo = new UserRepository();
 
 export class AdminUserController {
-  // POST /api/admin/users (multer)
+  // POST /api/admin/users 
   async createUser(req: Request, res: Response) {
     try {
       const parsed = AdminCreateUserDTO.safeParse({
@@ -111,7 +111,6 @@ export class AdminUserController {
         update.password = await bcryptjs.hash(update.password, BCRYPT_SALT_ROUNDS);
       }
 
-      // If image not provided, don’t overwrite it with undefined
       if (!((req as any).file?.filename)) {
         delete update.image;
       }

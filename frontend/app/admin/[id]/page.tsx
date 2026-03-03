@@ -20,6 +20,7 @@ export default function AdminUserByIdPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +36,6 @@ export default function AdminUserByIdPage() {
 
   const handleDelete = async () => {
     if (!id) return;
-    if (!confirm("Are you sure you want to delete this user?")) return;
 
     setDeleting(true);
     try {
@@ -60,6 +60,21 @@ export default function AdminUserByIdPage() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const openDeletePopup = () => {
+    if (!id || deleting) return;
+    setShowDeletePopup(true);
+  };
+
+  const closeDeletePopup = () => {
+    if (deleting) return;
+    setShowDeletePopup(false);
+  };
+
+  const confirmDelete = async () => {
+    setShowDeletePopup(false);
+    await handleDelete();
   };
 
   return (
@@ -88,7 +103,7 @@ export default function AdminUserByIdPage() {
           )}
 
           <button
-            onClick={handleDelete}
+            onClick={openDeletePopup}
             disabled={deleting}
             className="text-sm px-3 py-1 rounded-md border border-red-600 text-red-500 hover:bg-red-600/10 transition disabled:opacity-60"
           >
@@ -152,7 +167,7 @@ export default function AdminUserByIdPage() {
               </Link>
 
               <button
-                onClick={handleDelete}
+                onClick={openDeletePopup}
                 disabled={deleting}
                 className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-500 hover:bg-red-600/10 transition text-left disabled:opacity-60"
               >
@@ -160,6 +175,34 @@ export default function AdminUserByIdPage() {
               </button>
             </div>
           </aside>
+        </div>
+      ) : null}
+
+      {showDeletePopup ? (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-lg border border-blue-200 bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-semibold text-blue-700">Delete user?</h2>
+            <p className="mt-2 text-sm text-blue-600">
+              This action cannot be undone. Do you want to continue?
+            </p>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={closeDeletePopup}
+                disabled={deleting}
+                className="rounded-md border border-blue-300 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 transition disabled:opacity-60"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition disabled:opacity-60"
+              >
+                {deleting ? "Deleting..." : "Confirm"}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

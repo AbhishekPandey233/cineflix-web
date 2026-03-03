@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CineFlix Web App
 
-## Getting Started
+CineFlix is a full-stack web application that lets users browse movies, select seats, and book cinema tickets online.
 
-First, run the development server:
+## How to Use the App
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 1. Register and Login
+Create an account using your email and password, or log in with your existing credentials.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Browse Movies
+Go to the Movies page to explore currently available titles and view detailed movie information such as genre, duration, rating, and description.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Select Showtime and Seats
+Open a movie detail page, choose your preferred showtime, and select available seats from the seat map.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Confirm Booking
+Review your selected movie, showtime, and seats, then complete your booking.
 
-## Learn More
+### 5. View Booking History
+Visit the History page to check your previous and current bookings.
 
-To learn more about Next.js, take a look at the following resources:
+### 6. Manage Profile
+Update your user profile information and avatar from the User/Profile section.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Key Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Secure email/password authentication
+- Movie listing and detailed movie pages
+- Interactive seat selection
+- Ticket booking and reservation flow
+- Booking history tracking
+- User profile and avatar management
+- Admin dashboard for managing movies, users, showtimes, and bookings

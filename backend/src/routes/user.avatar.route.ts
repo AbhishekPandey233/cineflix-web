@@ -19,7 +19,6 @@ router.post("/avatar", requireAuth, uploadUserImage.single("avatar"), async (req
     const userId = (req as any).user?.id;
     if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
 
-    // Save the relative path in the user document (field 'image')
     const updated = await User.findByIdAndUpdate(userId, { image: pathUrl }, { new: true });
 
     return res.json({ success: true, message: "Upload successful", url, path: pathUrl, user: updated });
